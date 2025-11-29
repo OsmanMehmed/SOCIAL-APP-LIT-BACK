@@ -24,7 +24,7 @@ public class MessageDao {
     // return jdbcTemplate.query(sql, mapper, conversationId);
     return List.of(
         new DirectMessage("m1", conversationId, "ana.cocina", "me", "Tip anterior sobre la receta.", Instant.now()),
-        new DirectMessage("m2", conversationId, "me", "ana.cocina", "Gracias, salió increíble.", Instant.now())
+        new DirectMessage("m2", conversationId, "me", "ana.cocina", "Gracias, salio increible.", Instant.now())
     );
   }
 

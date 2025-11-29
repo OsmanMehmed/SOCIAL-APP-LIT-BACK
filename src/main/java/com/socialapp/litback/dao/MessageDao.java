@@ -18,7 +18,7 @@ public class MessageDao {
     this.jdbcTemplate = jdbcTemplate;
   }
 
-  private DirectMessage mapMessage(java.sql.ResultSet rs) throws java.sql.SQLException {
+  private DirectMessage mapMessage(java.sql.ResultSet rs, int rowNum) throws java.sql.SQLException {
     return new DirectMessage(
         rs.getString("id"),
         rs.getString("conversation_id"),
@@ -28,7 +28,7 @@ public class MessageDao {
         rs.getTimestamp("sent_at").toInstant());
   }
 
-  private Conversation mapConversation(java.sql.ResultSet rs) throws java.sql.SQLException {
+  private Conversation mapConversation(java.sql.ResultSet rs, int rowNum) throws java.sql.SQLException {
     return new Conversation(
         rs.getString("id"),
         rs.getString("participant_a"),

@@ -16,7 +16,7 @@ public class FriendDao {
     this.jdbcTemplate = jdbcTemplate;
   }
 
-  private UserProfile mapProfile(java.sql.ResultSet rs) throws java.sql.SQLException {
+  private UserProfile mapProfile(java.sql.ResultSet rs, int rowNum) throws java.sql.SQLException {
     return new UserProfile(
         rs.getString("id"),
         "@" + rs.getString("username"),
@@ -26,7 +26,7 @@ public class FriendDao {
         rs.getString("avatar_url"));
   }
 
-  private FriendRequest mapRequest(java.sql.ResultSet rs) throws java.sql.SQLException {
+  private FriendRequest mapRequest(java.sql.ResultSet rs, int rowNum) throws java.sql.SQLException {
     return new FriendRequest(
         rs.getString("id"),
         rs.getString("from_user_id"),

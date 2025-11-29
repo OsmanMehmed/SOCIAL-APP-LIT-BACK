@@ -16,7 +16,7 @@ public class ProfileDao {
     this.jdbcTemplate = jdbcTemplate;
   }
 
-  private UserProfile mapProfile(java.sql.ResultSet rs) throws java.sql.SQLException {
+  private UserProfile mapProfile(java.sql.ResultSet rs, int rowNum) throws java.sql.SQLException {
     return new UserProfile(
         rs.getString("id"),
         "@" + rs.getString("username"),
@@ -27,11 +27,21 @@ public class ProfileDao {
   }
 
   public Optional<UserProfile> findById(String id) {
-    String sql = "SELECT id, username, subtitle, friend, banned, avatar_url FROM users WHERE id = ?";
+    final String sqlById =
+        "SELECT id, username, subtitle, friend, banned, avatar_url FROM users WHERE id = ?";
     try {
-      return Optional.ofNullable(jdbcTemplate.queryForObject(sql, this::mapProfile, id));
+      return Optional.ofNullable(jdbcTemplate.queryForObject(sqlById, this::mapProfile, id));
     } catch (EmptyResultDataAccessException ex) {
-      return Optional.empty();
+      // fallback: buscar por username (quita prefijo @ si viene)
+      final String username = id.replace("@", "");
+      final String sqlByUsername =
+          "SELECT id, username, subtitle, friend, banned, avatar_url FROM users WHERE username = ?";
+      try {
+        return Optional.ofNullable(
+            jdbcTemplate.queryForObject(sqlByUsername, this::mapProfile, username));
+      } catch (EmptyResultDataAccessException ex2) {
+        return Optional.empty();
+      }
     }
   }
 

@@ -20,7 +20,7 @@ public class PostDao {
     this.jdbcTemplate = jdbcTemplate;
   }
 
-  private Post mapPost(java.sql.ResultSet rs) throws java.sql.SQLException {
+  private Post mapPost(java.sql.ResultSet rs, int rowNum) throws java.sql.SQLException {
     return new Post(
         rs.getString("id"),
         rs.getString("caption"),
@@ -30,7 +30,7 @@ public class PostDao {
         rs.getInt("saves"));
   }
 
-  private Comment mapComment(java.sql.ResultSet rs) throws java.sql.SQLException {
+  private Comment mapComment(java.sql.ResultSet rs, int rowNum) throws java.sql.SQLException {
     return new Comment(
         rs.getString("id"),
         rs.getString("post_id"),
@@ -41,12 +41,21 @@ public class PostDao {
 
   public Optional<Post> findById(String id) {
     String sql = "SELECT id, caption, author_id, likes, comments, saves FROM posts WHERE id = ?";
-    return jdbcTemplate.query(sql, this::mapPost, id).stream().findFirst();
+    var result = jdbcTemplate.query(sql, this::mapPost, id).stream().findFirst();
+    if (result.isPresent()) return result;
+
+    // fallback: intentar prefijo post- si el id viene como "1" en lugar de "post-1"
+    String altId = id.startsWith("post-") ? id : "post-" + id;
+    return jdbcTemplate.query(sql, this::mapPost, altId).stream().findFirst();
   }
 
   public List<Comment> findComments(String postId) {
-    String sql = "SELECT id, post_id, author_id, text, created_at FROM comments WHERE post_id = ? ORDER BY created_at ASC";
-    return jdbcTemplate.query(sql, this::mapComment, postId);
+    String sql =
+        "SELECT id, post_id, author_id, text, created_at FROM comments WHERE post_id = ? ORDER BY created_at ASC";
+    var comments = jdbcTemplate.query(sql, this::mapComment, postId);
+    if (!comments.isEmpty()) return comments;
+    String altId = postId.startsWith("post-") ? postId : "post-" + postId;
+    return jdbcTemplate.query(sql, this::mapComment, altId);
   }
 
   public PostDetails create(Post post) {

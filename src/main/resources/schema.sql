@@ -21,10 +21,10 @@ CREATE TABLE IF NOT EXISTS posts (
     saves INT DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (author_id) REFERENCES users(id),
-    INDEX idx_posts_author (author_id),
-    INDEX idx_posts_created (created_at)
+    FOREIGN KEY (author_id) REFERENCES users(id)
 );
+CREATE INDEX IF NOT EXISTS idx_posts_author ON posts(author_id);
+CREATE INDEX IF NOT EXISTS idx_posts_created ON posts(created_at);
 
 -- Comments table
 CREATE TABLE IF NOT EXISTS comments (
@@ -34,10 +34,10 @@ CREATE TABLE IF NOT EXISTS comments (
     text TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (post_id) REFERENCES posts(id),
-    FOREIGN KEY (author_id) REFERENCES users(id),
-    INDEX idx_comments_post (post_id),
-    INDEX idx_comments_author (author_id)
+    FOREIGN KEY (author_id) REFERENCES users(id)
 );
+CREATE INDEX IF NOT EXISTS idx_comments_post ON comments(post_id);
+CREATE INDEX IF NOT EXISTS idx_comments_author ON comments(author_id);
 
 -- Conversations table
 CREATE TABLE IF NOT EXISTS conversations (
@@ -47,9 +47,9 @@ CREATE TABLE IF NOT EXISTS conversations (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (participant_a) REFERENCES users(id),
-    FOREIGN KEY (participant_b) REFERENCES users(id),
-    INDEX idx_conversations_participants (participant_a, participant_b)
+    FOREIGN KEY (participant_b) REFERENCES users(id)
 );
+CREATE INDEX IF NOT EXISTS idx_conversations_participants ON conversations(participant_a, participant_b);
 
 -- Messages table
 CREATE TABLE IF NOT EXISTS messages (
@@ -61,10 +61,10 @@ CREATE TABLE IF NOT EXISTS messages (
     sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (conversation_id) REFERENCES conversations(id),
     FOREIGN KEY (from_user) REFERENCES users(id),
-    FOREIGN KEY (to_user) REFERENCES users(id),
-    INDEX idx_messages_conversation (conversation_id),
-    INDEX idx_messages_from_user (from_user)
+    FOREIGN KEY (to_user) REFERENCES users(id)
 );
+CREATE INDEX IF NOT EXISTS idx_messages_conversation ON messages(conversation_id);
+CREATE INDEX IF NOT EXISTS idx_messages_from_user ON messages(from_user);
 
 -- Sessions table
 CREATE TABLE IF NOT EXISTS sessions (
@@ -72,9 +72,9 @@ CREATE TABLE IF NOT EXISTS sessions (
     user_id VARCHAR(36) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     expires_at TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id),
-    INDEX idx_sessions_user (user_id)
+    FOREIGN KEY (user_id) REFERENCES users(id)
 );
+CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id);
 
 -- Friends table
 CREATE TABLE IF NOT EXISTS friends (
@@ -82,11 +82,11 @@ CREATE TABLE IF NOT EXISTS friends (
     user_id VARCHAR(36) NOT NULL,
     friend_id VARCHAR(36) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE KEY unique_friendship (user_id, friend_id),
+    UNIQUE (user_id, friend_id),
     FOREIGN KEY (user_id) REFERENCES users(id),
-    FOREIGN KEY (friend_id) REFERENCES users(id),
-    INDEX idx_friends_user (user_id)
+    FOREIGN KEY (friend_id) REFERENCES users(id)
 );
+CREATE INDEX IF NOT EXISTS idx_friends_user ON friends(user_id);
 
 -- Friend Requests table
 CREATE TABLE IF NOT EXISTS friend_requests (
@@ -97,11 +97,11 @@ CREATE TABLE IF NOT EXISTS friend_requests (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (from_user_id) REFERENCES users(id),
-    FOREIGN KEY (to_user_id) REFERENCES users(id),
-    INDEX idx_friend_requests_from_user (from_user_id),
-    INDEX idx_friend_requests_to_user (to_user_id),
-    INDEX idx_friend_requests_status (status)
+    FOREIGN KEY (to_user_id) REFERENCES users(id)
 );
+CREATE INDEX IF NOT EXISTS idx_friend_requests_from_user ON friend_requests(from_user_id);
+CREATE INDEX IF NOT EXISTS idx_friend_requests_to_user ON friend_requests(to_user_id);
+CREATE INDEX IF NOT EXISTS idx_friend_requests_status ON friend_requests(status);
 
 -- Post Details (materialized view-like table for performance)
 CREATE TABLE IF NOT EXISTS post_details (
@@ -112,6 +112,6 @@ CREATE TABLE IF NOT EXISTS post_details (
     comments INT DEFAULT 0,
     saves INT DEFAULT 0,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (author_id) REFERENCES users(id),
-    INDEX idx_post_details_author (author_id)
+    FOREIGN KEY (author_id) REFERENCES users(id)
 );
+CREATE INDEX IF NOT EXISTS idx_post_details_author ON post_details(author_id);

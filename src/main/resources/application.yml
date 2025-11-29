@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: social-app-lit-back
+  datasource:
+    url: jdbc:h2:mem:socialdb
+    driverClassName: org.h2.Driver
+    username: sa
+    password:
+  h2:
+    console:
+      enabled: true
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop
+  sql:
+    init:
+      mode: always
+      data-locations: classpath:data.sql
+      schema-locations: classpath:schema.sql
+
+server:
+  port: 8080

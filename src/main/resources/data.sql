@@ -35,8 +35,8 @@ INSERT INTO messages (id, conversation_id, from_user, to_user, text) VALUES
 
 -- Insert test sessions
 INSERT INTO sessions (token, user_id, expires_at) VALUES
-('demo-token-123', 'user-1', DATE_ADD(NOW(), INTERVAL 24 HOUR)),
-('demo-token-456', 'user-2', DATE_ADD(NOW(), INTERVAL 24 HOUR));
+('demo-token-123', 'user-1', DATEADD('HOUR', 24, CURRENT_TIMESTAMP)),
+('demo-token-456', 'user-2', DATEADD('HOUR', 24, CURRENT_TIMESTAMP));
 
 -- Insert test friendships
 INSERT INTO friends (id, user_id, friend_id) VALUES

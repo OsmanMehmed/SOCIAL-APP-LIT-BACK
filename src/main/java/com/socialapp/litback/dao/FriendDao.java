@@ -6,7 +6,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Optional;
+import java.util.UUID;
 
 @Repository
 public class FriendDao {
@@ -16,45 +16,64 @@ public class FriendDao {
     this.jdbcTemplate = jdbcTemplate;
   }
 
+  private UserProfile mapProfile(java.sql.ResultSet rs) throws java.sql.SQLException {
+    return new UserProfile(
+        rs.getString("id"),
+        "@" + rs.getString("username"),
+        rs.getString("subtitle"),
+        rs.getBoolean("friend"),
+        rs.getBoolean("banned"),
+        rs.getString("avatar_url"));
+  }
+
+  private FriendRequest mapRequest(java.sql.ResultSet rs) throws java.sql.SQLException {
+    return new FriendRequest(
+        rs.getString("id"),
+        rs.getString("from_user_id"),
+        rs.getString("to_user_id"),
+        rs.getString("status"));
+  }
+
   public List<UserProfile> search(String query) {
-    String sql = new StringBuilder()
-        .append("SELECT id, username, subtitle FROM profiles WHERE username ILIKE ?")
-        .toString();
-    // return jdbcTemplate.query(sql, mapper, "%" + query + "%");
-    return List.of(new UserProfile("ana.cocina", "@ana.cocina", "Panes artesanos", true, false, null));
+    String sql = "SELECT id, username, subtitle, friend, banned, avatar_url FROM users WHERE username LIKE ?";
+    return jdbcTemplate.query(sql, this::mapProfile, "%" + query + "%");
   }
 
   public FriendRequest sendRequest(String from, String to) {
-    String sql = new StringBuilder()
-        .append("INSERT INTO friend_requests (from_user, to_user, status) VALUES (?, ?, 'PENDING')")
-        .toString();
-    // jdbcTemplate.update(sql, from, to);
-    return new FriendRequest("fr-1", from, to, "PENDING");
+    String id = UUID.randomUUID().toString();
+    jdbcTemplate.update(
+        "INSERT INTO friend_requests (id, from_user_id, to_user_id, status) VALUES (?, ?, ?, 'PENDING')",
+        id, from, to);
+    return new FriendRequest(id, from, to, "PENDING");
   }
 
   public FriendRequest respond(String requestId, String status) {
-    String sql = new StringBuilder()
-        .append("UPDATE friend_requests SET status = ? WHERE id = ?")
-        .toString();
-    // jdbcTemplate.update(sql, status, requestId);
-    return new FriendRequest(requestId, "from-demo", "to-demo", status);
+    jdbcTemplate.update("UPDATE friend_requests SET status = ? WHERE id = ?", status, requestId);
+    String sql = "SELECT id, from_user_id, to_user_id, status FROM friend_requests WHERE id = ?";
+    FriendRequest updated = jdbcTemplate.queryForObject(sql, this::mapRequest, requestId);
+    if ("ACCEPTED".equalsIgnoreCase(status)) {
+      jdbcTemplate.update(
+          "INSERT INTO friends (id, user_id, friend_id) VALUES (?, ?, ?)",
+          UUID.randomUUID().toString(), updated.fromUserId(), updated.toUserId());
+      jdbcTemplate.update(
+          "INSERT INTO friends (id, user_id, friend_id) VALUES (?, ?, ?)",
+          UUID.randomUUID().toString(), updated.toUserId(), updated.fromUserId());
+    }
+    return updated;
   }
 
   public List<FriendRequest> listPending(String userId) {
-    String sql = new StringBuilder()
-        .append("SELECT id, from_user, to_user, status FROM friend_requests WHERE to_user = ? AND status = 'PENDING'")
-        .toString();
-    // return jdbcTemplate.query(sql, mapper, userId);
-    return List.of(new FriendRequest("fr-1", "ana.cocina", userId, "PENDING"));
+    String sql = "SELECT id, from_user_id, to_user_id, status FROM friend_requests WHERE to_user_id = ? AND status = 'PENDING'";
+    return jdbcTemplate.query(sql, this::mapRequest, userId);
   }
 
   public List<UserProfile> listFriends(String userId) {
     String sql = new StringBuilder()
-        .append("SELECT p.id, p.username, p.subtitle, p.banned FROM profiles p ")
-        .append("JOIN friendships f ON (f.user_id = p.id OR f.friend_id = p.id) ")
-        .append("WHERE (f.user_id = ? OR f.friend_id = ?) AND f.status = 'ACCEPTED'")
+        .append("SELECT u.id, u.username, u.subtitle, u.friend, u.banned, u.avatar_url ")
+        .append("FROM friends f ")
+        .append("JOIN users u ON (u.id = f.friend_id) ")
+        .append("WHERE f.user_id = ?")
         .toString();
-    // return jdbcTemplate.query(sql, mapper, userId, userId);
-    return List.of(new UserProfile("osman.chef", "@osman.chef", "Reto semanal", true, false, null));
+    return jdbcTemplate.query(sql, this::mapProfile, userId);
   }
 }

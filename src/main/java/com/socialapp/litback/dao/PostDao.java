@@ -6,9 +6,11 @@ import com.socialapp.litback.model.PostDetails;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
 public class PostDao {
@@ -18,74 +20,80 @@ public class PostDao {
     this.jdbcTemplate = jdbcTemplate;
   }
 
+  private Post mapPost(java.sql.ResultSet rs) throws java.sql.SQLException {
+    return new Post(
+        rs.getString("id"),
+        rs.getString("caption"),
+        rs.getString("author_id"),
+        rs.getInt("likes"),
+        rs.getInt("comments"),
+        rs.getInt("saves"));
+  }
+
+  private Comment mapComment(java.sql.ResultSet rs) throws java.sql.SQLException {
+    return new Comment(
+        rs.getString("id"),
+        rs.getString("post_id"),
+        rs.getString("author_id"),
+        rs.getString("text"),
+        rs.getTimestamp("created_at").toInstant());
+  }
+
   public Optional<Post> findById(String id) {
-    String sql = new StringBuilder()
-        .append("SELECT id, caption, author_id, likes, comments, saves FROM posts WHERE id = ?")
-        .toString();
-    // return jdbcTemplate.query(sql, mapper, id).stream().findFirst();
-    return Optional.of(new Post(id, "Pasta fresca con salsa", "ana.cocina", 120, 18, 15));
+    String sql = "SELECT id, caption, author_id, likes, comments, saves FROM posts WHERE id = ?";
+    return jdbcTemplate.query(sql, this::mapPost, id).stream().findFirst();
   }
 
   public List<Comment> findComments(String postId) {
-    String sql = new StringBuilder()
-        .append("SELECT id, post_id, author_id, text, created_at FROM comments WHERE post_id = ?")
-        .append(" ORDER BY created_at ASC")
-        .toString();
-    // return jdbcTemplate.query(sql, mapper, postId);
-    return List.of(
-        new Comment("c1", postId, "osman.chef", "Tip anterior sobre la receta.", Instant.now())
-    );
+    String sql = "SELECT id, post_id, author_id, text, created_at FROM comments WHERE post_id = ? ORDER BY created_at ASC";
+    return jdbcTemplate.query(sql, this::mapComment, postId);
   }
 
   public PostDetails create(Post post) {
-    String sql = new StringBuilder()
-        .append("INSERT INTO posts (caption, author_id) VALUES (?, ?)")
-        .toString();
-    // jdbcTemplate.update(sql, post.caption(), post.authorId());
-    return new PostDetails("p-new", post.caption(), post.authorId(), 0, 0, 0, List.of(), Instant.now());
+    String id = post.id() != null ? post.id() : UUID.randomUUID().toString();
+    jdbcTemplate.update(
+        "INSERT INTO posts (id, caption, author_id, likes, comments, saves, updated_at) VALUES (?, ?, ?, 0, 0, 0, CURRENT_TIMESTAMP)",
+        id, post.caption(), post.authorId());
+    return new PostDetails(id, post.caption(), post.authorId(), 0, 0, 0, List.of(), Instant.now());
   }
 
   public PostDetails update(Post post) {
-    String sql = new StringBuilder()
-        .append("UPDATE posts SET caption = ? WHERE id = ?")
-        .toString();
-    // jdbcTemplate.update(sql, post.caption(), post.id());
+    jdbcTemplate.update(
+        "UPDATE posts SET caption = ?, likes = ?, comments = ?, saves = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+        post.caption(), post.likes(), post.comments(), post.saves(), post.id());
     return new PostDetails(post.id(), post.caption(), post.authorId(), post.likes(), post.comments(), post.saves(), List.of(), Instant.now());
   }
 
   public void delete(String id) {
-    String sql = "DELETE FROM posts WHERE id = ?";
-    // jdbcTemplate.update(sql, id);
+    jdbcTemplate.update("DELETE FROM posts WHERE id = ?", id);
   }
 
   public Comment addComment(Comment comment) {
-    String sql = "INSERT INTO comments (post_id, author_id, text) VALUES (?, ?, ?)";
-    // jdbcTemplate.update(sql, comment.postId(), comment.authorId(), comment.text());
-    return comment;
+    String id = comment.id() != null ? comment.id() : UUID.randomUUID().toString();
+    Timestamp created = comment.createdAt() != null ? Timestamp.from(comment.createdAt()) : Timestamp.from(Instant.now());
+    jdbcTemplate.update(
+        "INSERT INTO comments (id, post_id, author_id, text, created_at) VALUES (?, ?, ?, ?, ?)",
+        id, comment.postId(), comment.authorId(), comment.text(), created);
+    return new Comment(id, comment.postId(), comment.authorId(), comment.text(), created.toInstant());
   }
 
   public void deleteComment(String commentId) {
-    String sql = "DELETE FROM comments WHERE id = ?";
-    // jdbcTemplate.update(sql, commentId);
+    jdbcTemplate.update("DELETE FROM comments WHERE id = ?", commentId);
   }
 
   public Post like(String postId, boolean like) {
-    String sql = new StringBuilder()
-        .append("UPDATE posts SET likes = likes + ")
-        .append(like ? "1" : "-1")
-        .append(" WHERE id = ?")
-        .toString();
-    // jdbcTemplate.update(sql, postId);
-    return new Post(postId, "Pasta fresca con salsa", "ana.cocina", like ? 121 : 119, 18, 15);
+    jdbcTemplate.update(
+        "UPDATE posts SET likes = likes + ? WHERE id = ?",
+        like ? 1 : -1,
+        postId);
+    return findById(postId).orElse(new Post(postId, "dato-mockeado", "dato-mockeado", 0, 0, 0));
   }
 
   public Post save(String postId, boolean save) {
-    String sql = new StringBuilder()
-        .append("UPDATE posts SET saves = saves + ")
-        .append(save ? "1" : "-1")
-        .append(" WHERE id = ?")
-        .toString();
-    // jdbcTemplate.update(sql, postId);
-    return new Post(postId, "Pasta fresca con salsa", "ana.cocina", 120, 18, save ? 16 : 14);
+    jdbcTemplate.update(
+        "UPDATE posts SET saves = saves + ? WHERE id = ?",
+        save ? 1 : -1,
+        postId);
+    return findById(postId).orElse(new Post(postId, "dato-mockeado", "dato-mockeado", 0, 0, 0));
   }
 }

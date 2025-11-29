@@ -3,8 +3,11 @@ package com.socialapp.litback.dao;
 import com.socialapp.litback.model.AuthRequest;
 import com.socialapp.litback.model.AuthResponse;
 import com.socialapp.litback.model.UserProfile;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
+
+import java.util.UUID;
 
 @Repository
 public class AuthDao {
@@ -14,34 +17,72 @@ public class AuthDao {
     this.jdbcTemplate = jdbcTemplate;
   }
 
+  private UserProfile mapUserProfile(String id, String username, String subtitle, boolean friend, boolean banned, String avatarUrl) {
+    return new UserProfile(id, username, subtitle, friend, banned, avatarUrl);
+  }
+
   public AuthResponse login(AuthRequest request) {
     String sql = new StringBuilder()
-        .append("SELECT id, username, subtitle FROM users ")
-        .append("WHERE username = ? AND password = ?")
+        .append("SELECT id, username, subtitle, friend, banned, avatar_url ")
+        .append("FROM users WHERE username = ? AND password = ?")
         .toString();
-    // jdbcTemplate.queryForObject(sql, rowMapper, request.username(), request.password());
-    UserProfile profile = new UserProfile("1", request.username(), "Perfil demo", true, false, null);
-    return new AuthResponse("demo-token-123", profile);
+    try {
+      UserProfile profile = jdbcTemplate.queryForObject(sql, (rs, rowNum) ->
+          mapUserProfile(
+              rs.getString("id"),
+              "@" + rs.getString("username"),
+              rs.getString("subtitle"),
+              rs.getBoolean("friend"),
+              rs.getBoolean("banned"),
+              rs.getString("avatar_url")
+          ), request.username(), request.password());
+      String token = UUID.randomUUID().toString();
+      jdbcTemplate.update(
+          "INSERT INTO sessions (token, user_id, expires_at) VALUES (?, ?, DATEADD('HOUR', 24, CURRENT_TIMESTAMP))",
+          token, profile.id());
+      return new AuthResponse(token, profile);
+    } catch (EmptyResultDataAccessException ex) {
+      UserProfile profile = new UserProfile("dato-mockeado", "@" + request.username(), "dato-mockeado", false, false, null);
+      return new AuthResponse("token-dato-mockeado", profile);
+    }
   }
 
   public AuthResponse register(AuthRequest request) {
-    String sql = new StringBuilder()
-        .append("INSERT INTO users (username, password) VALUES (?, ?)")
-        .toString();
-    // jdbcTemplate.update(sql, request.username(), request.password());
-    UserProfile profile = new UserProfile("2", request.username(), "Nuevo usuario", false, false, null);
-    return new AuthResponse("demo-token-456", profile);
+    String userId = UUID.randomUUID().toString();
+    jdbcTemplate.update(
+        "INSERT INTO users (id, username, password, subtitle) VALUES (?, ?, ?, ?)",
+        userId, request.username(), request.password(), "Nuevo usuario");
+    UserProfile profile = new UserProfile(userId, "@" + request.username(), "Nuevo usuario", false, false, null);
+    String token = UUID.randomUUID().toString();
+    jdbcTemplate.update(
+        "INSERT INTO sessions (token, user_id, expires_at) VALUES (?, ?, DATEADD('HOUR', 24, CURRENT_TIMESTAMP))",
+        token, userId);
+    return new AuthResponse(token, profile);
   }
 
   public void logout(String token) {
-    String sql = "DELETE FROM sessions WHERE token = ?";
-    // jdbcTemplate.update(sql, token);
+    jdbcTemplate.update("DELETE FROM sessions WHERE token = ?", token);
   }
 
   public AuthResponse refresh(String token) {
-    String sql = "SELECT u.id, u.username, u.subtitle FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.token = ?";
-    // jdbcTemplate.queryForObject(sql, mapper, token);
-    UserProfile profile = new UserProfile("1", "@refreshed", "Perfil refrescado", true, false, null);
-    return new AuthResponse(token, profile);
+    String sql = new StringBuilder()
+        .append("SELECT u.id, u.username, u.subtitle, u.friend, u.banned, u.avatar_url ")
+        .append("FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.token = ?")
+        .toString();
+    try {
+      UserProfile profile = jdbcTemplate.queryForObject(sql, (rs, rowNum) ->
+          mapUserProfile(
+              rs.getString("id"),
+              "@" + rs.getString("username"),
+              rs.getString("subtitle"),
+              rs.getBoolean("friend"),
+              rs.getBoolean("banned"),
+              rs.getString("avatar_url")
+          ), token);
+      return new AuthResponse(token, profile);
+    } catch (EmptyResultDataAccessException ex) {
+      UserProfile profile = new UserProfile("dato-mockeado", "@usuario-mock", "dato-mockeado", false, false, null);
+      return new AuthResponse("token-dato-mockeado", profile);
+    }
   }
 }

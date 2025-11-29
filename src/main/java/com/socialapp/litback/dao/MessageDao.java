@@ -5,8 +5,10 @@ import com.socialapp.litback.model.DirectMessage;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.List;
+import java.util.UUID;
 
 @Repository
 public class MessageDao {
@@ -16,44 +18,52 @@ public class MessageDao {
     this.jdbcTemplate = jdbcTemplate;
   }
 
+  private DirectMessage mapMessage(java.sql.ResultSet rs) throws java.sql.SQLException {
+    return new DirectMessage(
+        rs.getString("id"),
+        rs.getString("conversation_id"),
+        rs.getString("from_user"),
+        rs.getString("to_user"),
+        rs.getString("text"),
+        rs.getTimestamp("sent_at").toInstant());
+  }
+
+  private Conversation mapConversation(java.sql.ResultSet rs) throws java.sql.SQLException {
+    return new Conversation(
+        rs.getString("id"),
+        rs.getString("participant_a"),
+        rs.getString("participant_b"),
+        rs.getTimestamp("updated_at").toInstant());
+  }
+
   public List<DirectMessage> getThread(String conversationId) {
-    String sql = new StringBuilder()
-        .append("SELECT id, conversation_id, from_user, to_user, text, sent_at FROM messages ")
-        .append("WHERE conversation_id = ? ORDER BY sent_at ASC")
-        .toString();
-    // return jdbcTemplate.query(sql, mapper, conversationId);
-    return List.of(
-        new DirectMessage("m1", conversationId, "ana.cocina", "me", "Tip anterior sobre la receta.", Instant.now()),
-        new DirectMessage("m2", conversationId, "me", "ana.cocina", "Gracias, salio increible.", Instant.now())
-    );
+    String sql = "SELECT id, conversation_id, from_user, to_user, text, sent_at FROM messages WHERE conversation_id = ? ORDER BY sent_at ASC";
+    return jdbcTemplate.query(sql, this::mapMessage, conversationId);
   }
 
   public DirectMessage sendMessage(String conversationId, String from, String to, String text) {
-    String sql = new StringBuilder()
-        .append("INSERT INTO messages (conversation_id, from_user, to_user, text) ")
-        .append("VALUES (?, ?, ?, ?)")
-        .toString();
-    // jdbcTemplate.update(sql, conversationId, from, to, text);
-    return new DirectMessage("m-new", conversationId, from, to, text, Instant.now());
+    String id = UUID.randomUUID().toString();
+    Timestamp now = Timestamp.from(Instant.now());
+    jdbcTemplate.update(
+        "INSERT INTO messages (id, conversation_id, from_user, to_user, text, sent_at) VALUES (?, ?, ?, ?, ?, ?)",
+        id, conversationId, from, to, text, now);
+    return new DirectMessage(id, conversationId, from, to, text, now.toInstant());
   }
 
   public void deleteMessage(String messageId) {
-    String sql = "DELETE FROM messages WHERE id = ?";
-    // jdbcTemplate.update(sql, messageId);
+    jdbcTemplate.update("DELETE FROM messages WHERE id = ?", messageId);
   }
 
   public Conversation createConversation(String a, String b) {
-    String sql = "INSERT INTO conversations (participant_a, participant_b) VALUES (?, ?)";
-    // jdbcTemplate.update(sql, a, b);
-    return new Conversation("conv-new", a, b, Instant.now());
+    String id = UUID.randomUUID().toString();
+    jdbcTemplate.update(
+        "INSERT INTO conversations (id, participant_a, participant_b, updated_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP)",
+        id, a, b);
+    return new Conversation(id, a, b, Instant.now());
   }
 
   public List<Conversation> listConversations(String userId) {
-    String sql = new StringBuilder()
-        .append("SELECT id, participant_a, participant_b, updated_at FROM conversations ")
-        .append("WHERE participant_a = ? OR participant_b = ? ORDER BY updated_at DESC")
-        .toString();
-    // return jdbcTemplate.query(sql, mapper, userId, userId);
-    return List.of(new Conversation("conv-1", userId, "ana.cocina", Instant.now()));
+    String sql = "SELECT id, participant_a, participant_b, updated_at FROM conversations WHERE participant_a = ? OR participant_b = ? ORDER BY updated_at DESC";
+    return jdbcTemplate.query(sql, this::mapConversation, userId, userId);
   }
 }

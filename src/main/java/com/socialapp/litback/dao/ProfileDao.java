@@ -1,10 +1,12 @@
 package com.socialapp.litback.dao;
 
 import com.socialapp.litback.model.UserProfile;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
 public class ProfileDao {
@@ -14,36 +16,56 @@ public class ProfileDao {
     this.jdbcTemplate = jdbcTemplate;
   }
 
+  private UserProfile mapProfile(java.sql.ResultSet rs) throws java.sql.SQLException {
+    return new UserProfile(
+        rs.getString("id"),
+        "@" + rs.getString("username"),
+        rs.getString("subtitle"),
+        rs.getBoolean("friend"),
+        rs.getBoolean("banned"),
+        rs.getString("avatar_url"));
+  }
+
   public Optional<UserProfile> findById(String id) {
-    String sql = new StringBuilder()
-        .append("SELECT id, username, subtitle, banned FROM profiles WHERE id = ?")
-        .toString();
-    // return jdbcTemplate.query(sql, rs -> { ... });
-    return Optional.of(new UserProfile(id, "@" + id, "Perfil de demo", true, false, null));
+    String sql = "SELECT id, username, subtitle, friend, banned, avatar_url FROM users WHERE id = ?";
+    try {
+      return Optional.ofNullable(jdbcTemplate.queryForObject(sql, this::mapProfile, id));
+    } catch (EmptyResultDataAccessException ex) {
+      return Optional.empty();
+    }
   }
 
   public UserProfile create(UserProfile profile) {
-    String sql = "INSERT INTO profiles (id, username, subtitle) VALUES (?, ?, ?)";
-    // jdbcTemplate.update(sql, profile.id(), profile.username(), profile.subtitle());
-    return profile;
+    String id = profile.id() != null ? profile.id() : UUID.randomUUID().toString();
+    jdbcTemplate.update(
+        "INSERT INTO users (id, username, subtitle, friend, banned, avatar_url, password) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        id,
+        profile.username().replace("@", ""),
+        profile.subtitle(),
+        profile.friend(),
+        profile.banned(),
+        profile.avatarUrl(),
+        "password123");
+    return new UserProfile(id, profile.username(), profile.subtitle(), profile.friend(), profile.banned(), profile.avatarUrl());
   }
 
   public UserProfile update(UserProfile profile) {
-    String sql = "UPDATE profiles SET subtitle = ?, banned = ? WHERE id = ?";
-    // jdbcTemplate.update(sql, profile.subtitle(), profile.banned(), profile.id());
+    jdbcTemplate.update(
+        "UPDATE users SET subtitle = ?, friend = ?, banned = ?, avatar_url = ? WHERE id = ?",
+        profile.subtitle(),
+        profile.friend(),
+        profile.banned(),
+        profile.avatarUrl(),
+        profile.id());
     return profile;
   }
 
   public void delete(String id) {
-    String sql = "DELETE FROM profiles WHERE id = ?";
-    // jdbcTemplate.update(sql, id);
+    jdbcTemplate.update("DELETE FROM users WHERE id = ?", id);
   }
 
   public boolean vetProfile(String id, boolean banned) {
-    String sql = new StringBuilder()
-        .append("UPDATE profiles SET banned = ? WHERE id = ?")
-        .toString();
-    // int updated = jdbcTemplate.update(sql, banned, id);
-    return true;
+    int updated = jdbcTemplate.update("UPDATE users SET banned = ? WHERE id = ?", banned, id);
+    return updated > 0;
   }
 }

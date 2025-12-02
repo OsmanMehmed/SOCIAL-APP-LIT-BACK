@@ -4,6 +4,7 @@ import com.socialapp.litback.dao.PostDao;
 import com.socialapp.litback.model.Comment;
 import com.socialapp.litback.model.Post;
 import com.socialapp.litback.model.PostDetails;
+import com.socialapp.litback.shared.Constants;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -62,18 +63,18 @@ public class PostService {
   public Post like(String postId, String userId, boolean like) {
     return postDao
         .like(postId, userId, like)
-        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Post not found"));
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, Constants.ERR_POST_NOT_FOUND));
   }
 
   public Post save(String postId, boolean save) {
     return postDao
         .save(postId, save)
-        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Post not found"));
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, Constants.ERR_POST_NOT_FOUND));
   }
 
   public Post ban(String postId, boolean banned) {
     return postDao
         .setBanned(postId, banned)
-        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Post not found"));
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, Constants.ERR_POST_NOT_FOUND));
   }
 }

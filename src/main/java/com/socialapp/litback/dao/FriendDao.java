@@ -2,6 +2,7 @@ package com.socialapp.litback.dao;
 
 import com.socialapp.litback.model.FriendRequest;
 import com.socialapp.litback.model.UserProfile;
+import com.socialapp.litback.shared.Constants;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -52,6 +53,9 @@ public class FriendDao {
     jdbcTemplate.update("UPDATE friend_requests SET status = ? WHERE id = ?", status, requestId);
     String sql = "SELECT id, from_user_id, to_user_id, status FROM friend_requests WHERE id = ?";
     FriendRequest updated = jdbcTemplate.queryForObject(sql, this::mapRequest, requestId);
+    if (updated == null) {
+      throw new IllegalStateException(String.format(Constants.ERR_FRIEND_REQUEST_NOT_FOUND, requestId));
+    }
     if ("ACCEPTED".equalsIgnoreCase(status)) {
       jdbcTemplate.update(
           "INSERT INTO friends (id, user_id, friend_id) VALUES (?, ?, ?)",

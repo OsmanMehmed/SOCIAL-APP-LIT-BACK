@@ -2,3 +2,4 @@
 .m2
 .idea
 effective-pom.xml
+*.log

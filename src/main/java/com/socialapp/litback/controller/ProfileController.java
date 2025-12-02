@@ -23,16 +23,16 @@ public class ProfileController {
       @RequestHeader(value = "X-User-Id", required = false) String currentUserId,
       @RequestHeader(value = "Authorization", required = false) String authToken) {
     // If client requested /profile/me but didn't send X-User-Id, try to resolve from Authorization token
-    if ((id == null || "me".equals(id)) && (currentUserId == null || "me".equals(currentUserId))) {
-      if (authToken != null && !authToken.isBlank()) {
-        try {
-          var auth = authService.refresh(authToken);
-          if (auth != null && auth.userProfile() != null) {
-            currentUserId = auth.userProfile().id();
-          }
-        } catch (Exception ex) {
-          // ignore, fallback will produce notFound
+    if ((id == null || "me".equals(id))
+        && (currentUserId == null || "me".equals(currentUserId))
+        && authToken != null && !authToken.isBlank()) {
+      try {
+        var auth = authService.refresh(authToken);
+        if (auth != null && auth.userProfile() != null) {
+          currentUserId = auth.userProfile().id();
         }
+      } catch (Exception ex) {
+        // ignore, fallback will produce notFound
       }
     }
     return profileService.getProfile(id, currentUserId)

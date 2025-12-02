@@ -3,6 +3,7 @@ package com.socialapp.litback.dao;
 import com.socialapp.litback.model.Comment;
 import com.socialapp.litback.model.Post;
 import com.socialapp.litback.model.PostDetails;
+import com.socialapp.litback.shared.Constants;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -23,7 +24,7 @@ public class PostDao {
   }
 
   private Post mapPost(java.sql.ResultSet rs, int rowNum) throws java.sql.SQLException {
-    boolean liked = hasColumn(rs, "liked") ? rs.getBoolean("liked") : false;
+    boolean liked = hasColumn(rs, "liked") && rs.getBoolean("liked");
     return new Post(
         rs.getString("id"),
         rs.getString("caption"),
@@ -97,7 +98,7 @@ public class PostDao {
     var result = jdbcTemplate.query(sql, this::mapPost, userId, id).stream().findFirst();
     if (result.isPresent()) return result;
 
-    String altId = id.startsWith("post-") ? id : "post-" + id;
+    String altId = id.startsWith(Constants.POST_PREFIX) ? id : Constants.POST_PREFIX + id;
     return jdbcTemplate.query(sql, this::mapPost, userId, altId).stream().findFirst();
   }
 
@@ -106,7 +107,7 @@ public class PostDao {
         "SELECT id, post_id, author_id, text, created_at FROM comments WHERE post_id = ? ORDER BY created_at ASC";
     var comments = jdbcTemplate.query(sql, this::mapComment, postId);
     if (!comments.isEmpty()) return comments;
-    String altId = postId.startsWith("post-") ? postId : "post-" + postId;
+    String altId = postId.startsWith(Constants.POST_PREFIX) ? postId : Constants.POST_PREFIX + postId;
     return jdbcTemplate.query(sql, this::mapComment, altId);
   }
 
@@ -141,12 +142,12 @@ public class PostDao {
 
   private String normalizePostId(String id) {
     if (id == null || id.isBlank()) return id;
-    return id.startsWith("post-") ? id : "post-" + id;
+    return id.startsWith(Constants.POST_PREFIX) ? id : Constants.POST_PREFIX + id;
   }
 
   private String resolveAuthorId(String rawAuthorId) {
     if (rawAuthorId == null || rawAuthorId.isBlank()) {
-      return "user-1";
+      return Constants.DEFAULT_USER_ID;
     }
     String candidate = rawAuthorId.replace("@", "");
     try {
@@ -160,10 +161,11 @@ public class PostDao {
         return candidate;
       }
     } catch (Exception ignored) {
+      // default to fallback user when lookup fails
     }
-    return "user-1";
+    return Constants.DEFAULT_USER_ID;
   }
-
+  
   public Comment addComment(Comment comment) {
     String id = comment.id() != null ? comment.id() : UUID.randomUUID().toString();
     String normalizedPostId = normalizePostId(comment.postId());

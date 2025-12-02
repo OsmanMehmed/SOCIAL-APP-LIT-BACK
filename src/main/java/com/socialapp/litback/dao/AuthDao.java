@@ -3,12 +3,14 @@ package com.socialapp.litback.dao;
 import com.socialapp.litback.model.AuthRequest;
 import com.socialapp.litback.model.AuthResponse;
 import com.socialapp.litback.model.UserProfile;
+import com.socialapp.litback.shared.Constants;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Objects;
 import java.util.UUID;
 
 @Repository
@@ -38,13 +40,14 @@ public class AuthDao {
               rs.getBoolean("banned"),
               rs.getString("avatar_url")
       ), request.username(), request.password());
+      profile = Objects.requireNonNull(profile, "Profile must not be null");
       String token = UUID.randomUUID().toString();
       jdbcTemplate.update(
           "INSERT INTO sessions (token, user_id, expires_at) VALUES (?, ?, {fn TIMESTAMPADD(SQL_TSI_HOUR, 24, CURRENT_TIMESTAMP)})",
           token, profile.id());
       return new AuthResponse(token, profile);
     } catch (EmptyResultDataAccessException ex) {
-      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Credenciales invalidas");
+      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, Constants.ERR_CREDENTIALS_INVALIDAS);
     }
   }
 
@@ -52,8 +55,8 @@ public class AuthDao {
     String userId = UUID.randomUUID().toString();
     jdbcTemplate.update(
         "INSERT INTO users (id, username, password, subtitle) VALUES (?, ?, ?, ?)",
-        userId, request.username(), request.password(), "Nuevo usuario");
-    UserProfile profile = new UserProfile(userId, "@" + request.username(), "Nuevo usuario", false, false, null, true);
+        userId, request.username(), request.password(), Constants.DEFAULT_USER_SUBTITLE);
+    UserProfile profile = new UserProfile(userId, "@" + request.username(), Constants.DEFAULT_USER_SUBTITLE, false, false, null, true);
     String token = UUID.randomUUID().toString();
     jdbcTemplate.update(
         "INSERT INTO sessions (token, user_id, expires_at) VALUES (?, ?, {fn TIMESTAMPADD(SQL_TSI_HOUR, 24, CURRENT_TIMESTAMP)})",
@@ -80,9 +83,10 @@ public class AuthDao {
               rs.getBoolean("banned"),
               rs.getString("avatar_url")
           ), token);
+      profile = Objects.requireNonNull(profile, "Profile must not be null");
       return new AuthResponse(token, profile);
     } catch (EmptyResultDataAccessException ex) {
-      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Sesion no valida");
+      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, Constants.ERR_SESION_NO_VALIDA);
     }
   }
 }

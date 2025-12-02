@@ -23,12 +23,26 @@ public class FriendController {
   }
 
   @PostMapping("/requests")
-  public ResponseEntity<FriendRequest> sendRequest(@RequestParam String from, @RequestParam String to) {
+  public ResponseEntity<FriendRequest> sendRequest(
+      @RequestParam String from,
+      @RequestParam String to,
+      @RequestHeader(value = "X-User-Id", required = false) String currentUserId) {
+    // Validar que no se pueda enviar solicitud a uno mismo
+    if (from.equals(to)) {
+      return ResponseEntity.status(400).build();
+    }
+    // Validar que el usuario autenticado sea quien envía la solicitud
+    if (currentUserId != null && !currentUserId.equals(from)) {
+      return ResponseEntity.status(403).build();
+    }
     return ResponseEntity.ok(friendService.sendRequest(from, to));
   }
 
   @PostMapping("/requests/{id}/respond")
-  public ResponseEntity<FriendRequest> respond(@PathVariable String id, @RequestParam String status) {
+  public ResponseEntity<FriendRequest> respond(
+      @PathVariable String id,
+      @RequestParam String status,
+      @RequestHeader(value = "X-User-Id", required = false) String currentUserId) {
     return ResponseEntity.ok(friendService.respond(id, status));
   }
 

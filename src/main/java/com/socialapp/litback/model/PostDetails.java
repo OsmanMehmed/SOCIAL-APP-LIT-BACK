@@ -11,5 +11,6 @@ public record PostDetails(
     int comments,
     int saves,
     boolean banned,
+    Boolean liked,
     List<Comment> commentsList,
     Instant updatedAt) {}

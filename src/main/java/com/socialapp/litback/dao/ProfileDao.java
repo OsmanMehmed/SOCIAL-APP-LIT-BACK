@@ -23,7 +23,8 @@ public class ProfileDao {
         rs.getString("subtitle"),
         rs.getBoolean("friend"),
         rs.getBoolean("banned"),
-        rs.getString("avatar_url"));
+        rs.getString("avatar_url"),
+        false);
   }
 
   public Optional<UserProfile> findById(String id) {
@@ -56,7 +57,7 @@ public class ProfileDao {
         profile.banned(),
         profile.avatarUrl(),
         "password123");
-    return new UserProfile(id, profile.username(), profile.subtitle(), profile.friend(), profile.banned(), profile.avatarUrl());
+    return new UserProfile(id, profile.username(), profile.subtitle(), profile.friend(), profile.banned(), profile.avatarUrl(), false);
   }
 
   public UserProfile update(UserProfile profile) {

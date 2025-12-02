@@ -6,4 +6,5 @@ public record UserProfile(
     String subtitle,
     boolean friend,
     boolean banned,
-    String avatarUrl) {}
+    String avatarUrl,
+    boolean isOwnProfile) {}

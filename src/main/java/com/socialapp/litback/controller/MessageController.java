@@ -23,7 +23,18 @@ public class MessageController {
   }
 
   @PostMapping("/conversations")
-  public ResponseEntity<Conversation> createConversation(@RequestParam String a, @RequestParam String b) {
+  public ResponseEntity<Conversation> createConversation(
+      @RequestParam String a,
+      @RequestParam String b,
+      @RequestHeader(value = "X-User-Id", required = false) String currentUserId) {
+    // Validar que no se pueda crear conversación consigo mismo
+    if (a.equals(b)) {
+      return ResponseEntity.status(400).build();
+    }
+    // Validar que el usuario autenticado sea uno de los participantes
+    if (currentUserId != null && !currentUserId.equals(a) && !currentUserId.equals(b)) {
+      return ResponseEntity.status(403).build();
+    }
     return ResponseEntity.ok(messageService.createConversation(a, b));
   }
 
@@ -37,13 +48,20 @@ public class MessageController {
   @PostMapping("/thread/{conversationId}")
   public ResponseEntity<DirectMessage> sendMessage(
       @PathVariable String conversationId,
-      @RequestBody SendMessageRequest payload) {
+      @RequestBody SendMessageRequest payload,
+      @RequestHeader(value = "X-User-Id", required = false) String currentUserId) {
+    // Validar que el usuario autenticado sea quien envía el mensaje
+    if (currentUserId != null && !currentUserId.equals(payload.fromUserId())) {
+      return ResponseEntity.status(403).build();
+    }
     return ResponseEntity.ok(
         messageService.send(conversationId, payload.fromUserId(), payload.toUserId(), payload.text()));
   }
 
   @DeleteMapping("/messages/{messageId}")
-  public ResponseEntity<Void> deleteMessage(@PathVariable String messageId) {
+  public ResponseEntity<Void> deleteMessage(
+      @PathVariable String messageId,
+      @RequestHeader(value = "X-User-Id", required = false) String currentUserId) {
     messageService.deleteMessage(messageId);
     return ResponseEntity.noContent().build();
   }

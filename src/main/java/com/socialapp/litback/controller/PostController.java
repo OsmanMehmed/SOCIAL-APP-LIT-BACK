@@ -6,6 +6,8 @@ import com.socialapp.litback.model.PostDetails;
 import com.socialapp.litback.service.PostService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
 
 import java.util.List;
 
@@ -19,13 +21,23 @@ public class PostController {
   }
 
   @GetMapping
-  public ResponseEntity<List<Post>> listPosts() {
-    return ResponseEntity.ok(postService.listPosts());
+  public ResponseEntity<List<Post>> listPosts(
+      @RequestHeader(value = "X-User-Id", required = false) String userId) {
+    return ResponseEntity.ok(postService.listPosts(userId));
+  }
+
+  @GetMapping("/search")
+  public ResponseEntity<List<Post>> searchPosts(
+      @RequestParam String q,
+      @RequestHeader(value = "X-User-Id", required = false) String userId) {
+    return ResponseEntity.ok(postService.search(q, userId));
   }
 
   @GetMapping("/{id}")
-  public ResponseEntity<Post> getPost(@PathVariable String id) {
-    return postService.getPost(id)
+  public ResponseEntity<Post> getPost(
+      @PathVariable String id,
+      @RequestHeader(value = "X-User-Id", required = false) String userId) {
+    return postService.getPost(id, userId)
         .map(ResponseEntity::ok)
         .orElseGet(() -> ResponseEntity.notFound().build());
   }
@@ -42,7 +54,7 @@ public class PostController {
 
   @PutMapping("/{id}")
   public ResponseEntity<PostDetails> updatePost(@PathVariable String id, @RequestBody Post post) {
-    return ResponseEntity.ok(postService.update(new Post(id, post.caption(), post.authorId(), post.likes(), post.comments(), post.saves(), post.banned())));
+    return ResponseEntity.ok(postService.update(new Post(id, post.caption(), post.authorId(), post.likes(), post.comments(), post.saves(), post.banned(), post.liked())));
   }
 
   @DeleteMapping("/{id}")
@@ -63,8 +75,14 @@ public class PostController {
   }
 
   @PostMapping("/{id}/like")
-  public ResponseEntity<Post> like(@PathVariable String id, @RequestParam(defaultValue = "true") boolean like) {
-    return ResponseEntity.ok(postService.like(id, like));
+  public ResponseEntity<Post> like(
+      @PathVariable String id,
+      @RequestParam(defaultValue = "true") boolean like,
+      @RequestHeader(value = "X-User-Id", required = false) String userId) {
+    if (userId == null || userId.isBlank()) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Header X-User-Id requerido");
+    }
+    return ResponseEntity.ok(postService.like(id, userId, like));
   }
 
   @PostMapping("/{id}/save")

@@ -7,4 +7,5 @@ public record Post(
     int likes,
     int comments,
     int saves,
-    boolean banned) {}
+    boolean banned,
+    Boolean liked) {}

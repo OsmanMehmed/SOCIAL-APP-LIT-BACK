@@ -23,7 +23,8 @@ public class FriendDao {
         rs.getString("subtitle"),
         rs.getBoolean("friend"),
         rs.getBoolean("banned"),
-        rs.getString("avatar_url"));
+        rs.getString("avatar_url"),
+        false);
   }
 
   private FriendRequest mapRequest(java.sql.ResultSet rs, int rowNum) throws java.sql.SQLException {

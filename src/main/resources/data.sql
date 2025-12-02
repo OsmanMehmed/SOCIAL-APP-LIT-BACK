@@ -16,6 +16,12 @@ INSERT INTO post_details (id, caption, author_id, likes, comments, saves, banned
 ('post-2', 'Receta de pan casero', 'user-2', 85, 12, 8, FALSE),
 ('post-3', 'Desayuno saludable', 'user-1', 45, 5, 3, FALSE);
 
+-- Insert test post likes (subset for demo)
+INSERT INTO post_likes (post_id, user_id) VALUES
+('post-1', 'user-1'),
+('post-2', 'user-1'),
+('post-3', 'user-2');
+
 -- Insert test comments
 INSERT INTO comments (id, post_id, author_id, text) VALUES
 ('comment-1', 'post-1', 'user-2', 'Tip anterior sobre la receta.'),
@@ -35,8 +41,8 @@ INSERT INTO messages (id, conversation_id, from_user, to_user, text) VALUES
 
 -- Insert test sessions
 INSERT INTO sessions (token, user_id, expires_at) VALUES
-('demo-token-123', 'user-1', DATEADD('HOUR', 24, CURRENT_TIMESTAMP)),
-('demo-token-456', 'user-2', DATEADD('HOUR', 24, CURRENT_TIMESTAMP));
+('demo-token-123', 'user-1', CURRENT_TIMESTAMP),
+('demo-token-456', 'user-2', CURRENT_TIMESTAMP);
 
 -- Insert test friendships
 INSERT INTO friends (id, user_id, friend_id) VALUES

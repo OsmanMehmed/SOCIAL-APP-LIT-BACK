@@ -19,12 +19,16 @@ public class PostService {
     this.postDao = postDao;
   }
 
-  public Optional<Post> getPost(String id) {
-    return postDao.findById(id);
+  public Optional<Post> getPost(String id, String userId) {
+    return postDao.findById(id, userId);
   }
 
-  public List<Post> listPosts() {
-    return postDao.listAll();
+  public List<Post> listPosts(String userId) {
+    return postDao.listAll(userId);
+  }
+
+  public List<Post> search(String query, String userId) {
+    return postDao.searchByCaption(query, userId);
   }
 
   public List<Comment> getComments(String postId) {
@@ -51,9 +55,9 @@ public class PostService {
     postDao.deleteComment(commentId);
   }
 
-  public Post like(String postId, boolean like) {
+  public Post like(String postId, String userId, boolean like) {
     return postDao
-        .like(postId, like)
+        .like(postId, userId, like)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Post not found"));
   }
 

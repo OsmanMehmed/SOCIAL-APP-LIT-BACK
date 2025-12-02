@@ -6,6 +6,8 @@ import com.socialapp.litback.model.PostDetails;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.List;
@@ -21,6 +23,7 @@ public class PostDao {
   }
 
   private Post mapPost(java.sql.ResultSet rs, int rowNum) throws java.sql.SQLException {
+    boolean liked = hasColumn(rs, "liked") ? rs.getBoolean("liked") : false;
     return new Post(
         rs.getString("id"),
         rs.getString("caption"),
@@ -28,7 +31,8 @@ public class PostDao {
         rs.getInt("likes"),
         rs.getInt("comments"),
         rs.getInt("saves"),
-        rs.getBoolean("banned"));
+        rs.getBoolean("banned"),
+        liked);
   }
 
   private Comment mapComment(java.sql.ResultSet rs, int rowNum) throws java.sql.SQLException {
@@ -40,20 +44,50 @@ public class PostDao {
         rs.getTimestamp("created_at").toInstant());
   }
 
-  public List<Post> listAll() {
-    String sql =
-        "SELECT id, caption, author_id, likes, comments, saves, banned FROM posts ORDER BY updated_at DESC";
-    return jdbcTemplate.query(sql, this::mapPost);
+  private boolean hasColumn(java.sql.ResultSet rs, String column) throws SQLException {
+    ResultSetMetaData meta = rs.getMetaData();
+    for (int i = 1; i <= meta.getColumnCount(); i++) {
+      if (column.equalsIgnoreCase(meta.getColumnLabel(i))) {
+        return true;
+      }
+    }
+    return false;
   }
 
-  public Optional<Post> findById(String id) {
-    String sql = "SELECT id, caption, author_id, likes, comments, saves, banned FROM posts WHERE id = ?";
-    var result = jdbcTemplate.query(sql, this::mapPost, id).stream().findFirst();
+  public List<Post> listAll(String userId) {
+    String sql =
+        "SELECT p.id, p.caption, p.author_id, p.likes, p.comments, p.saves, p.banned, "
+            + "CASE WHEN pl.user_id IS NULL THEN FALSE ELSE TRUE END AS liked "
+            + "FROM posts p "
+            + "LEFT JOIN post_likes pl ON pl.post_id = p.id AND pl.user_id = ? "
+            + "ORDER BY p.updated_at DESC";
+    return jdbcTemplate.query(sql, this::mapPost, userId);
+  }
+
+  public List<Post> searchByCaption(String query, String userId) {
+    String like = "%" + query.toLowerCase() + "%";
+    String sql =
+        "SELECT p.id, p.caption, p.author_id, p.likes, p.comments, p.saves, p.banned, "
+            + "CASE WHEN pl.user_id IS NULL THEN FALSE ELSE TRUE END AS liked "
+            + "FROM posts p "
+            + "LEFT JOIN post_likes pl ON pl.post_id = p.id AND pl.user_id = ? "
+            + "WHERE LOWER(p.caption) LIKE ? "
+            + "ORDER BY p.updated_at DESC";
+    return jdbcTemplate.query(sql, this::mapPost, userId, like);
+  }
+
+  public Optional<Post> findById(String id, String userId) {
+    String sql =
+        "SELECT p.id, p.caption, p.author_id, p.likes, p.comments, p.saves, p.banned, "
+            + "CASE WHEN pl.user_id IS NULL THEN FALSE ELSE TRUE END AS liked "
+            + "FROM posts p "
+            + "LEFT JOIN post_likes pl ON pl.post_id = p.id AND pl.user_id = ? "
+            + "WHERE p.id = ?";
+    var result = jdbcTemplate.query(sql, this::mapPost, userId, id).stream().findFirst();
     if (result.isPresent()) return result;
 
-    // fallback: intentar prefijo post- si el id viene como "1" en lugar de "post-1"
     String altId = id.startsWith("post-") ? id : "post-" + id;
-    return jdbcTemplate.query(sql, this::mapPost, altId).stream().findFirst();
+    return jdbcTemplate.query(sql, this::mapPost, userId, altId).stream().findFirst();
   }
 
   public List<Comment> findComments(String postId) {
@@ -74,7 +108,7 @@ public class PostDao {
     jdbcTemplate.update(
         "INSERT INTO post_details (id, caption, author_id, likes, comments, saves, banned, updated_at) VALUES (?, ?, ?, 0, 0, 0, ?, CURRENT_TIMESTAMP)",
         finalId, post.caption(), resolveAuthorId(post.authorId()), post.banned());
-    return new PostDetails(finalId, post.caption(), post.authorId(), 0, 0, 0, post.banned(), List.of(), Instant.now());
+    return new PostDetails(finalId, post.caption(), post.authorId(), 0, 0, 0, post.banned(), false, List.of(), Instant.now());
   }
 
   public PostDetails update(Post post) {
@@ -84,11 +118,14 @@ public class PostDao {
     jdbcTemplate.update(
         "UPDATE post_details SET caption = ?, likes = ?, comments = ?, saves = ?, banned = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
         post.caption(), post.likes(), post.comments(), post.saves(), post.banned(), post.id());
-    return new PostDetails(post.id(), post.caption(), post.authorId(), post.likes(), post.comments(), post.saves(), post.banned(), List.of(), Instant.now());
+    return new PostDetails(post.id(), post.caption(), post.authorId(), post.likes(), post.comments(), post.saves(), post.banned(), post.liked(), List.of(), Instant.now());
   }
 
   public void delete(String id) {
-    jdbcTemplate.update("DELETE FROM posts WHERE id = ?", id);
+    String normalized = normalizePostId(id);
+    jdbcTemplate.update("DELETE FROM post_likes WHERE post_id = ?", normalized);
+    jdbcTemplate.update("DELETE FROM comments WHERE post_id = ?", normalized);
+    jdbcTemplate.update("DELETE FROM posts WHERE id = ?", normalized);
   }
 
   private String normalizePostId(String id) {
@@ -131,28 +168,55 @@ public class PostDao {
     jdbcTemplate.update("DELETE FROM comments WHERE id = ?", commentId);
   }
 
-  public Optional<Post> like(String postId, boolean like) {
-    int updated =
-        jdbcTemplate.update(
-            "UPDATE posts SET likes = likes + ? WHERE id = ?",
-            like ? 1 : -1,
-            postId);
-    if (updated == 0) {
+  public Optional<Post> like(String postId, String userId, boolean like) {
+    String normalized = normalizePostId(postId);
+    Optional<Post> existing = findById(normalized, userId);
+    if (existing.isEmpty()) {
       return Optional.empty();
     }
-    return findById(postId);
+    boolean alreadyLiked = isLiked(normalized, userId);
+
+    if (like && !alreadyLiked) {
+      jdbcTemplate.update(
+          "INSERT INTO post_likes (post_id, user_id, created_at) VALUES (?, ?, CURRENT_TIMESTAMP)",
+          normalized,
+          userId);
+      jdbcTemplate.update(
+          "UPDATE posts SET likes = likes + 1 WHERE id = ?",
+          normalized);
+      jdbcTemplate.update(
+          "UPDATE post_details SET likes = likes + 1 WHERE id = ?",
+          normalized);
+    } else if (!like && alreadyLiked) {
+      jdbcTemplate.update("DELETE FROM post_likes WHERE post_id = ? AND user_id = ?", normalized, userId);
+      jdbcTemplate.update(
+          "UPDATE posts SET likes = CASE WHEN likes > 0 THEN likes - 1 ELSE 0 END WHERE id = ?",
+          normalized);
+      jdbcTemplate.update(
+          "UPDATE post_details SET likes = CASE WHEN likes > 0 THEN likes - 1 ELSE 0 END WHERE id = ?",
+          normalized);
+    }
+
+    return findById(normalized, userId);
   }
 
   public Optional<Post> save(String postId, boolean save) {
+    String normalized = normalizePostId(postId);
     int updated =
         jdbcTemplate.update(
-            "UPDATE posts SET saves = saves + ? WHERE id = ?",
+            "UPDATE posts SET saves = CASE WHEN saves + ? < 0 THEN 0 ELSE saves + ? END WHERE id = ?",
             save ? 1 : -1,
-            postId);
+            save ? 1 : -1,
+            normalized);
     if (updated == 0) {
       return Optional.empty();
     }
-    return findById(postId);
+    jdbcTemplate.update(
+        "UPDATE post_details SET saves = CASE WHEN saves + ? < 0 THEN 0 ELSE saves + ? END WHERE id = ?",
+        save ? 1 : -1,
+        save ? 1 : -1,
+        normalized);
+    return findById(normalized, null);
   }
 
   public Optional<Post> setBanned(String postId, boolean banned) {
@@ -163,6 +227,31 @@ public class PostDao {
     if (updatedPosts == 0 && updatedDetails == 0) {
       return Optional.empty();
     }
-    return findById(normalized);
+    return findById(normalized, null);
+  }
+
+  private boolean isLiked(String postId, String userId) {
+    if (userId == null || userId.isBlank()) {
+      return false;
+    }
+    Integer count =
+        jdbcTemplate.queryForObject(
+            "SELECT COUNT(*) FROM post_likes WHERE post_id = ? AND user_id = ?",
+            Integer.class,
+            postId,
+            userId);
+    return count != null && count > 0;
+  }
+
+  public List<Post> search(String query, String userId) {
+    String q = "%" + query.toLowerCase() + "%";
+    String sql =
+        "SELECT p.id, p.caption, p.author_id, p.likes, p.comments, p.saves, p.banned, "
+            + "CASE WHEN pl.user_id IS NULL THEN FALSE ELSE TRUE END AS liked "
+            + "FROM posts p "
+            + "LEFT JOIN post_likes pl ON pl.post_id = p.id AND pl.user_id = ? "
+            + "WHERE LOWER(p.caption) LIKE ? OR LOWER(p.author_id) LIKE ? "
+            + "ORDER BY p.updated_at DESC";
+    return jdbcTemplate.query(sql, this::mapPost, userId, q, q);
   }
 }

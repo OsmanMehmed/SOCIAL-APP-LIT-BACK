@@ -20,7 +20,7 @@ public class AuthDao {
   }
 
   private UserProfile mapUserProfile(String id, String username, String subtitle, boolean friend, boolean banned, String avatarUrl) {
-    return new UserProfile(id, username, subtitle, friend, banned, avatarUrl);
+    return new UserProfile(id, username, subtitle, friend, banned, avatarUrl, false);
   }
 
   public AuthResponse login(AuthRequest request) {
@@ -37,10 +37,10 @@ public class AuthDao {
               rs.getBoolean("friend"),
               rs.getBoolean("banned"),
               rs.getString("avatar_url")
-          ), request.username(), request.password());
+      ), request.username(), request.password());
       String token = UUID.randomUUID().toString();
       jdbcTemplate.update(
-          "INSERT INTO sessions (token, user_id, expires_at) VALUES (?, ?, DATEADD('HOUR', 24, CURRENT_TIMESTAMP))",
+          "INSERT INTO sessions (token, user_id, expires_at) VALUES (?, ?, {fn TIMESTAMPADD(SQL_TSI_HOUR, 24, CURRENT_TIMESTAMP)})",
           token, profile.id());
       return new AuthResponse(token, profile);
     } catch (EmptyResultDataAccessException ex) {
@@ -53,10 +53,10 @@ public class AuthDao {
     jdbcTemplate.update(
         "INSERT INTO users (id, username, password, subtitle) VALUES (?, ?, ?, ?)",
         userId, request.username(), request.password(), "Nuevo usuario");
-    UserProfile profile = new UserProfile(userId, "@" + request.username(), "Nuevo usuario", false, false, null);
+    UserProfile profile = new UserProfile(userId, "@" + request.username(), "Nuevo usuario", false, false, null, true);
     String token = UUID.randomUUID().toString();
     jdbcTemplate.update(
-        "INSERT INTO sessions (token, user_id, expires_at) VALUES (?, ?, DATEADD('HOUR', 24, CURRENT_TIMESTAMP))",
+        "INSERT INTO sessions (token, user_id, expires_at) VALUES (?, ?, {fn TIMESTAMPADD(SQL_TSI_HOUR, 24, CURRENT_TIMESTAMP)})",
         token, userId);
     return new AuthResponse(token, profile);
   }

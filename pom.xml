@@ -10,7 +10,7 @@
   <name>social-app-lit-back</name>
 
   <properties>
-    <java.version>21</java.version>
+    <java.version>20</java.version>
     <spring.boot.version>3.1.5</spring.boot.version>
     <derby.version>10.17.1.0</derby.version>
   </properties>

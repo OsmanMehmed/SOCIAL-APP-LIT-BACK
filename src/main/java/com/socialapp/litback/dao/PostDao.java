@@ -64,6 +64,17 @@ public class PostDao {
     return jdbcTemplate.query(sql, this::mapPost, userId);
   }
 
+  public List<Post> listByAuthor(String authorId, String userId) {
+    String sql =
+        "SELECT p.id, p.caption, p.author_id, p.likes, p.comments, p.saves, p.banned, "
+            + "CASE WHEN pl.user_id IS NULL THEN FALSE ELSE TRUE END AS liked "
+            + "FROM posts p "
+            + "LEFT JOIN post_likes pl ON pl.post_id = p.id AND pl.user_id = ? "
+            + "WHERE p.author_id = ? "
+            + "ORDER BY p.updated_at DESC";
+    return jdbcTemplate.query(sql, this::mapPost, userId, authorId);
+  }
+
   public List<Post> searchByCaption(String query, String userId) {
     String like = "%" + query.toLowerCase() + "%";
     String sql =

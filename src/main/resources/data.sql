@@ -8,13 +8,19 @@ INSERT INTO users (id, username, password, subtitle, avatar_url, friend, banned)
 INSERT INTO posts (id, author_id, caption, likes, comments, saves, banned) VALUES
 ('post-1', 'user-1', 'Pasta fresca con salsaaaaa', 120, 18, 15, FALSE),
 ('post-2', 'user-2', 'Receta de pan casero', 85, 12, 8, FALSE),
-('post-3', 'user-1', 'Desayuno saludable', 45, 5, 3, FALSE);
+('post-3', 'user-1', 'Desayuno saludable', 45, 5, 3, FALSE),
+('post-4', 'user-2', 'Curry suave con garbanzos y leche de coco', 32, 6, 4, FALSE),
+('post-5', 'user-2', 'Wraps de pollo crujiente con sriracha miel', 51, 9, 7, FALSE),
+('post-6', 'user-2', 'Cheesecake sin horno con frutos rojos', 76, 11, 10, FALSE);
 
 -- Insert test post_details
 INSERT INTO post_details (id, caption, author_id, likes, comments, saves, banned) VALUES
 ('post-1', 'Pasta fresca con salsaaaa', 'user-1', 120, 18, 15, FALSE),
 ('post-2', 'Receta de pan casero', 'user-2', 85, 12, 8, FALSE),
-('post-3', 'Desayuno saludable', 'user-1', 45, 5, 3, FALSE);
+('post-3', 'Desayuno saludable', 'user-1', 45, 5, 3, FALSE),
+('post-4', 'Curry suave con garbanzos y leche de coco', 'user-2', 32, 6, 4, FALSE),
+('post-5', 'Wraps de pollo crujiente con sriracha miel', 'user-2', 51, 9, 7, FALSE),
+('post-6', 'Cheesecake sin horno con frutos rojos', 'user-2', 76, 11, 10, FALSE);
 
 -- Insert test post likes (subset for demo)
 INSERT INTO post_likes (post_id, user_id) VALUES

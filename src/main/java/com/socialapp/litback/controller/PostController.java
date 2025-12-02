@@ -42,6 +42,19 @@ public class PostController {
         .orElseGet(() -> ResponseEntity.notFound().build());
   }
 
+  @GetMapping("/author/{id}")
+  public ResponseEntity<List<Post>> getPostsByAuthor(
+      @PathVariable String id,
+      @RequestHeader(value = "X-User-Id", required = false) String userId) {
+    String authorId = ("me".equalsIgnoreCase(id) || (id == null || id.isBlank()))
+        ? userId
+        : id;
+    if (authorId == null || authorId.isBlank()) {
+      return ResponseEntity.badRequest().build();
+    }
+    return ResponseEntity.ok(postService.listPostsByAuthor(authorId, userId));
+  }
+
   @GetMapping("/{id}/comments")
   public ResponseEntity<List<Comment>> getComments(@PathVariable String id) {
     return ResponseEntity.ok(postService.getComments(id));

@@ -27,6 +27,10 @@ public class PostService {
     return postDao.listAll(userId);
   }
 
+  public List<Post> listPostsByAuthor(String authorId, String userId) {
+    return postDao.listByAuthor(authorId, userId);
+  }
+
   public List<Post> search(String query, String userId) {
     return postDao.searchByCaption(query, userId);
   }

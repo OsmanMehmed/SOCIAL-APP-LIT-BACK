@@ -8,6 +8,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class PostService {
@@ -19,6 +21,10 @@ public class PostService {
 
   public Optional<Post> getPost(String id) {
     return postDao.findById(id);
+  }
+
+  public List<Post> listPosts() {
+    return postDao.listAll();
   }
 
   public List<Comment> getComments(String postId) {
@@ -46,14 +52,20 @@ public class PostService {
   }
 
   public Post like(String postId, boolean like) {
-    return postDao.like(postId, like);
+    return postDao
+        .like(postId, like)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Post not found"));
   }
 
   public Post save(String postId, boolean save) {
-    return postDao.save(postId, save);
+    return postDao
+        .save(postId, save)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Post not found"));
   }
 
   public Post ban(String postId, boolean banned) {
-    return postDao.setBanned(postId, banned);
+    return postDao
+        .setBanned(postId, banned)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Post not found"));
   }
 }

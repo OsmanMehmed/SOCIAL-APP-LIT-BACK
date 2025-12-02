@@ -18,6 +18,11 @@ public class PostController {
     this.postService = postService;
   }
 
+  @GetMapping
+  public ResponseEntity<List<Post>> listPosts() {
+    return ResponseEntity.ok(postService.listPosts());
+  }
+
   @GetMapping("/{id}")
   public ResponseEntity<Post> getPost(@PathVariable String id) {
     return postService.getPost(id)

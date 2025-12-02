@@ -82,8 +82,7 @@ public class AuthDao {
           ), token);
       return new AuthResponse(token, profile);
     } catch (EmptyResultDataAccessException ex) {
-      UserProfile profile = new UserProfile("dato-mockeado", "@usuario-mock", "dato-mockeado", false, false, null);
-      return new AuthResponse("token-dato-mockeado", profile);
+      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Sesion no valida");
     }
   }
 }

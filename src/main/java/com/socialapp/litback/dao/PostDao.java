@@ -40,6 +40,12 @@ public class PostDao {
         rs.getTimestamp("created_at").toInstant());
   }
 
+  public List<Post> listAll() {
+    String sql =
+        "SELECT id, caption, author_id, likes, comments, saves, banned FROM posts ORDER BY updated_at DESC";
+    return jdbcTemplate.query(sql, this::mapPost);
+  }
+
   public Optional<Post> findById(String id) {
     String sql = "SELECT id, caption, author_id, likes, comments, saves, banned FROM posts WHERE id = ?";
     var result = jdbcTemplate.query(sql, this::mapPost, id).stream().findFirst();
@@ -125,26 +131,38 @@ public class PostDao {
     jdbcTemplate.update("DELETE FROM comments WHERE id = ?", commentId);
   }
 
-  public Post like(String postId, boolean like) {
-    jdbcTemplate.update(
-        "UPDATE posts SET likes = likes + ? WHERE id = ?",
-        like ? 1 : -1,
-        postId);
-    return findById(postId).orElse(new Post(postId, "dato-mockeado", "dato-mockeado", 0, 0, 0, false));
+  public Optional<Post> like(String postId, boolean like) {
+    int updated =
+        jdbcTemplate.update(
+            "UPDATE posts SET likes = likes + ? WHERE id = ?",
+            like ? 1 : -1,
+            postId);
+    if (updated == 0) {
+      return Optional.empty();
+    }
+    return findById(postId);
   }
 
-  public Post save(String postId, boolean save) {
-    jdbcTemplate.update(
-        "UPDATE posts SET saves = saves + ? WHERE id = ?",
-        save ? 1 : -1,
-        postId);
-    return findById(postId).orElse(new Post(postId, "dato-mockeado", "dato-mockeado", 0, 0, 0, false));
+  public Optional<Post> save(String postId, boolean save) {
+    int updated =
+        jdbcTemplate.update(
+            "UPDATE posts SET saves = saves + ? WHERE id = ?",
+            save ? 1 : -1,
+            postId);
+    if (updated == 0) {
+      return Optional.empty();
+    }
+    return findById(postId);
   }
 
-  public Post setBanned(String postId, boolean banned) {
+  public Optional<Post> setBanned(String postId, boolean banned) {
     String normalized = normalizePostId(postId);
-    jdbcTemplate.update("UPDATE posts SET banned = ? WHERE id = ?", banned, normalized);
-    jdbcTemplate.update("UPDATE post_details SET banned = ? WHERE id = ?", banned, normalized);
-    return findById(normalized).orElse(new Post(normalized, "dato-mockeado", "dato-mockeado", 0, 0, 0, banned));
+    int updatedPosts = jdbcTemplate.update("UPDATE posts SET banned = ? WHERE id = ?", banned, normalized);
+    int updatedDetails =
+        jdbcTemplate.update("UPDATE post_details SET banned = ? WHERE id = ?", banned, normalized);
+    if (updatedPosts == 0 && updatedDetails == 0) {
+      return Optional.empty();
+    }
+    return findById(normalized);
   }
 }

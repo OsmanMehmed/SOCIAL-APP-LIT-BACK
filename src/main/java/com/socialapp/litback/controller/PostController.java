@@ -37,7 +37,7 @@ public class PostController {
 
   @PutMapping("/{id}")
   public ResponseEntity<PostDetails> updatePost(@PathVariable String id, @RequestBody Post post) {
-    return ResponseEntity.ok(postService.update(new Post(id, post.caption(), post.authorId(), post.likes(), post.comments(), post.saves())));
+    return ResponseEntity.ok(postService.update(new Post(id, post.caption(), post.authorId(), post.likes(), post.comments(), post.saves(), post.banned())));
   }
 
   @DeleteMapping("/{id}")
@@ -65,5 +65,10 @@ public class PostController {
   @PostMapping("/{id}/save")
   public ResponseEntity<Post> save(@PathVariable String id, @RequestParam(defaultValue = "true") boolean save) {
     return ResponseEntity.ok(postService.save(id, save));
+  }
+
+  @PostMapping("/{id}/ban")
+  public ResponseEntity<Post> ban(@PathVariable String id, @RequestParam(defaultValue = "true") boolean banned) {
+    return ResponseEntity.ok(postService.ban(id, banned));
   }
 }

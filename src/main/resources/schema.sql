@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS posts (
     likes INT DEFAULT 0,
     comments INT DEFAULT 0,
     saves INT DEFAULT 0,
+    banned BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (author_id) REFERENCES users(id)
@@ -111,6 +112,7 @@ CREATE TABLE IF NOT EXISTS post_details (
     likes INT DEFAULT 0,
     comments INT DEFAULT 0,
     saves INT DEFAULT 0,
+    banned BOOLEAN DEFAULT FALSE,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (author_id) REFERENCES users(id)
 );

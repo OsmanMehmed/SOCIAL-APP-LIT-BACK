@@ -52,4 +52,8 @@ public class PostService {
   public Post save(String postId, boolean save) {
     return postDao.save(postId, save);
   }
+
+  public Post ban(String postId, boolean banned) {
+    return postDao.setBanned(postId, banned);
+  }
 }

@@ -6,4 +6,5 @@ public record Post(
     String authorId,
     int likes,
     int comments,
-    int saves) {}
+    int saves,
+    boolean banned) {}

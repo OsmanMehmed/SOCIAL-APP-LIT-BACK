@@ -1,20 +1,20 @@
 -- Insert test users
 INSERT INTO users (id, username, password, subtitle, avatar_url, friend, banned) VALUES
 ('user-1', 'ana.cocina', 'password123', 'Chef de cocina', 'https://avatar.url/ana', FALSE, FALSE),
-('user-2', 'osman.chef', 'password123', 'Sous Chef', 'https://avatar.url/osman', FALSE, FALSE),
-('user-3', 'test.user', 'password123', 'Test User', 'https://avatar.url/test', FALSE, FALSE);
+('user-2', 'osman.chef', 'password124', 'Sous Chef', 'https://avatar.url/osman', FALSE, FALSE),
+('user-3', 'test.user', 'password124', 'Test User', 'https://avatar.url/test', FALSE, FALSE);
 
 -- Insert test posts
-INSERT INTO posts (id, author_id, caption, likes, comments, saves) VALUES
-('post-1', 'user-1', 'Pasta fresca con salsa', 120, 18, 15),
-('post-2', 'user-2', 'Receta de pan casero', 85, 12, 8),
-('post-3', 'user-1', 'Desayuno saludable', 45, 5, 3);
+INSERT INTO posts (id, author_id, caption, likes, comments, saves, banned) VALUES
+('post-1', 'user-1', 'Pasta fresca con salsaaaaa', 120, 18, 15, FALSE),
+('post-2', 'user-2', 'Receta de pan casero', 85, 12, 8, FALSE),
+('post-3', 'user-1', 'Desayuno saludable', 45, 5, 3, FALSE);
 
 -- Insert test post_details
-INSERT INTO post_details (id, caption, author_id, likes, comments, saves) VALUES
-('post-1', 'Pasta fresca con salsa', 'user-1', 120, 18, 15),
-('post-2', 'Receta de pan casero', 'user-2', 85, 12, 8),
-('post-3', 'Desayuno saludable', 'user-1', 45, 5, 3);
+INSERT INTO post_details (id, caption, author_id, likes, comments, saves, banned) VALUES
+('post-1', 'Pasta fresca con salsaaaa', 'user-1', 120, 18, 15, FALSE),
+('post-2', 'Receta de pan casero', 'user-2', 85, 12, 8, FALSE),
+('post-3', 'Desayuno saludable', 'user-1', 45, 5, 3, FALSE);
 
 -- Insert test comments
 INSERT INTO comments (id, post_id, author_id, text) VALUES

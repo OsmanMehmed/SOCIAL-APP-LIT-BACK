@@ -4,8 +4,10 @@ import com.socialapp.litback.model.AuthRequest;
 import com.socialapp.litback.model.AuthResponse;
 import com.socialapp.litback.model.UserProfile;
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.UUID;
 
@@ -42,8 +44,7 @@ public class AuthDao {
           token, profile.id());
       return new AuthResponse(token, profile);
     } catch (EmptyResultDataAccessException ex) {
-      UserProfile profile = new UserProfile("dato-mockeado", "@" + request.username(), "dato-mockeado", false, false, null);
-      return new AuthResponse("token-dato-mockeado", profile);
+      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Credenciales invalidas");
     }
   }
 

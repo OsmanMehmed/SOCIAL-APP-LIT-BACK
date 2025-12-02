@@ -27,7 +27,8 @@ public class PostDao {
         rs.getString("author_id"),
         rs.getInt("likes"),
         rs.getInt("comments"),
-        rs.getInt("saves"));
+        rs.getInt("saves"),
+        rs.getBoolean("banned"));
   }
 
   private Comment mapComment(java.sql.ResultSet rs, int rowNum) throws java.sql.SQLException {
@@ -40,7 +41,7 @@ public class PostDao {
   }
 
   public Optional<Post> findById(String id) {
-    String sql = "SELECT id, caption, author_id, likes, comments, saves FROM posts WHERE id = ?";
+    String sql = "SELECT id, caption, author_id, likes, comments, saves, banned FROM posts WHERE id = ?";
     var result = jdbcTemplate.query(sql, this::mapPost, id).stream().findFirst();
     if (result.isPresent()) return result;
 
@@ -60,30 +61,64 @@ public class PostDao {
 
   public PostDetails create(Post post) {
     String id = post.id() != null ? post.id() : UUID.randomUUID().toString();
+    String finalId = normalizePostId(id);
     jdbcTemplate.update(
-        "INSERT INTO posts (id, caption, author_id, likes, comments, saves, updated_at) VALUES (?, ?, ?, 0, 0, 0, CURRENT_TIMESTAMP)",
-        id, post.caption(), post.authorId());
-    return new PostDetails(id, post.caption(), post.authorId(), 0, 0, 0, List.of(), Instant.now());
+        "INSERT INTO posts (id, caption, author_id, likes, comments, saves, banned, updated_at) VALUES (?, ?, ?, 0, 0, 0, ?, CURRENT_TIMESTAMP)",
+        finalId, post.caption(), resolveAuthorId(post.authorId()), post.banned());
+    jdbcTemplate.update(
+        "INSERT INTO post_details (id, caption, author_id, likes, comments, saves, banned, updated_at) VALUES (?, ?, ?, 0, 0, 0, ?, CURRENT_TIMESTAMP)",
+        finalId, post.caption(), resolveAuthorId(post.authorId()), post.banned());
+    return new PostDetails(finalId, post.caption(), post.authorId(), 0, 0, 0, post.banned(), List.of(), Instant.now());
   }
 
   public PostDetails update(Post post) {
     jdbcTemplate.update(
-        "UPDATE posts SET caption = ?, likes = ?, comments = ?, saves = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
-        post.caption(), post.likes(), post.comments(), post.saves(), post.id());
-    return new PostDetails(post.id(), post.caption(), post.authorId(), post.likes(), post.comments(), post.saves(), List.of(), Instant.now());
+        "UPDATE posts SET caption = ?, likes = ?, comments = ?, saves = ?, banned = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+        post.caption(), post.likes(), post.comments(), post.saves(), post.banned(), post.id());
+    jdbcTemplate.update(
+        "UPDATE post_details SET caption = ?, likes = ?, comments = ?, saves = ?, banned = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+        post.caption(), post.likes(), post.comments(), post.saves(), post.banned(), post.id());
+    return new PostDetails(post.id(), post.caption(), post.authorId(), post.likes(), post.comments(), post.saves(), post.banned(), List.of(), Instant.now());
   }
 
   public void delete(String id) {
     jdbcTemplate.update("DELETE FROM posts WHERE id = ?", id);
   }
 
+  private String normalizePostId(String id) {
+    if (id == null || id.isBlank()) return id;
+    return id.startsWith("post-") ? id : "post-" + id;
+  }
+
+  private String resolveAuthorId(String rawAuthorId) {
+    if (rawAuthorId == null || rawAuthorId.isBlank()) {
+      return "user-1";
+    }
+    String candidate = rawAuthorId.replace("@", "");
+    try {
+      Integer count =
+          jdbcTemplate.queryForObject(
+              "SELECT COUNT(*) FROM users WHERE id = ? OR username = ?",
+              Integer.class,
+              candidate,
+              candidate);
+      if (count != null && count > 0) {
+        return candidate;
+      }
+    } catch (Exception ignored) {
+    }
+    return "user-1";
+  }
+
   public Comment addComment(Comment comment) {
     String id = comment.id() != null ? comment.id() : UUID.randomUUID().toString();
+    String normalizedPostId = normalizePostId(comment.postId());
+    String authorId = resolveAuthorId(comment.authorId());
     Timestamp created = comment.createdAt() != null ? Timestamp.from(comment.createdAt()) : Timestamp.from(Instant.now());
     jdbcTemplate.update(
         "INSERT INTO comments (id, post_id, author_id, text, created_at) VALUES (?, ?, ?, ?, ?)",
-        id, comment.postId(), comment.authorId(), comment.text(), created);
-    return new Comment(id, comment.postId(), comment.authorId(), comment.text(), created.toInstant());
+        id, normalizedPostId, authorId, comment.text(), created);
+    return new Comment(id, normalizedPostId, authorId, comment.text(), created.toInstant());
   }
 
   public void deleteComment(String commentId) {
@@ -95,7 +130,7 @@ public class PostDao {
         "UPDATE posts SET likes = likes + ? WHERE id = ?",
         like ? 1 : -1,
         postId);
-    return findById(postId).orElse(new Post(postId, "dato-mockeado", "dato-mockeado", 0, 0, 0));
+    return findById(postId).orElse(new Post(postId, "dato-mockeado", "dato-mockeado", 0, 0, 0, false));
   }
 
   public Post save(String postId, boolean save) {
@@ -103,6 +138,13 @@ public class PostDao {
         "UPDATE posts SET saves = saves + ? WHERE id = ?",
         save ? 1 : -1,
         postId);
-    return findById(postId).orElse(new Post(postId, "dato-mockeado", "dato-mockeado", 0, 0, 0));
+    return findById(postId).orElse(new Post(postId, "dato-mockeado", "dato-mockeado", 0, 0, 0, false));
+  }
+
+  public Post setBanned(String postId, boolean banned) {
+    String normalized = normalizePostId(postId);
+    jdbcTemplate.update("UPDATE posts SET banned = ? WHERE id = ?", banned, normalized);
+    jdbcTemplate.update("UPDATE post_details SET banned = ? WHERE id = ?", banned, normalized);
+    return findById(normalized).orElse(new Post(normalized, "dato-mockeado", "dato-mockeado", 0, 0, 0, banned));
   }
 }

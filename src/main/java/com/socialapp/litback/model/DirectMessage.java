@@ -5,7 +5,7 @@ import java.time.Instant;
 public record DirectMessage(
     String id,
     String conversationId,
-    String fromUser,
-    String toUser,
+    String fromUserId,
+    String toUserId,
     String text,
     Instant sentAt) {}

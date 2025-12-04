@@ -77,6 +77,10 @@ public class ProfileDao {
 
   public boolean vetProfile(String id, boolean banned) {
     int updated = jdbcTemplate.update("UPDATE users SET banned = ? WHERE id = ?", banned, id);
+    if (updated == 0 && id != null) {
+      String username = id.replace("@", "");
+      updated = jdbcTemplate.update("UPDATE users SET banned = ? WHERE username = ?", banned, username);
+    }
     return updated > 0;
   }
 }

@@ -1,6 +1,7 @@
 package com.socialapp.litback.dao;
 
 import com.socialapp.litback.model.FriendRequest;
+import com.socialapp.litback.model.Friendship;
 import com.socialapp.litback.model.UserProfile;
 import com.socialapp.litback.shared.Constants;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -36,6 +37,10 @@ public class FriendDao {
         rs.getString("status"));
   }
 
+  private Friendship mapFriendship(java.sql.ResultSet rs, int rowNum) throws java.sql.SQLException {
+    return new Friendship(rs.getString("id"), rs.getString("user_id"), rs.getString("friend_id"));
+  }
+
   public List<UserProfile> search(String query) {
     String sql = "SELECT id, username, subtitle, friend, banned, avatar_url FROM users WHERE username LIKE ?";
     return jdbcTemplate.query(sql, this::mapProfile, "%" + query + "%");
@@ -57,12 +62,7 @@ public class FriendDao {
       throw new IllegalStateException(String.format(Constants.ERR_FRIEND_REQUEST_NOT_FOUND, requestId));
     }
     if ("ACCEPTED".equalsIgnoreCase(status)) {
-      jdbcTemplate.update(
-          "INSERT INTO friends (id, user_id, friend_id) VALUES (?, ?, ?)",
-          UUID.randomUUID().toString(), updated.fromUserId(), updated.toUserId());
-      jdbcTemplate.update(
-          "INSERT INTO friends (id, user_id, friend_id) VALUES (?, ?, ?)",
-          UUID.randomUUID().toString(), updated.toUserId(), updated.fromUserId());
+      createFriendship(updated.fromUserId(), updated.toUserId());
     }
     return updated;
   }
@@ -74,11 +74,50 @@ public class FriendDao {
 
   public List<UserProfile> listFriends(String userId) {
     String sql = new StringBuilder()
-        .append("SELECT u.id, u.username, u.subtitle, u.friend, u.banned, u.avatar_url ")
+        .append("SELECT u.id, u.username, u.subtitle, TRUE AS friend, u.banned, u.avatar_url ")
         .append("FROM friends f ")
         .append("JOIN users u ON (u.id = f.friend_id) ")
         .append("WHERE f.user_id = ?")
         .toString();
     return jdbcTemplate.query(sql, this::mapProfile, userId);
+  }
+
+  private Friendship findFriendship(String userId, String friendId) {
+    String sql = "SELECT id, user_id, friend_id FROM friends WHERE user_id = ? AND friend_id = ?";
+    List<Friendship> matches = jdbcTemplate.query(sql, this::mapFriendship, userId, friendId);
+    return matches.isEmpty() ? null : matches.get(0);
+  }
+
+  public Friendship createFriendship(String userId, String friendId) {
+    if (userId == null || friendId == null) {
+      throw new IllegalArgumentException("User ids must be provided");
+    }
+    if (userId.equals(friendId)) {
+      throw new IllegalArgumentException(Constants.ERR_FRIEND_SELF_RELATION);
+    }
+    Friendship existing = findFriendship(userId, friendId);
+    if (existing != null) {
+      return existing;
+    }
+    String id = UUID.randomUUID().toString();
+    jdbcTemplate.update(
+        "INSERT INTO friends (id, user_id, friend_id) VALUES (?, ?, ?)", id, userId, friendId);
+    return new Friendship(id, userId, friendId);
+  }
+
+  public void deleteFriendship(String userId, String friendId) {
+    jdbcTemplate.update("DELETE FROM friends WHERE user_id = ? AND friend_id = ?", userId, friendId);
+  }
+
+  public boolean existsFriendship(String userId, String friendId) {
+    if (userId == null || friendId == null) {
+      return false;
+    }
+    Integer count = jdbcTemplate.queryForObject(
+        "SELECT COUNT(1) FROM friends WHERE user_id = ? AND friend_id = ?",
+        Integer.class,
+        userId,
+        friendId);
+    return count != null && count > 0;
   }
 }

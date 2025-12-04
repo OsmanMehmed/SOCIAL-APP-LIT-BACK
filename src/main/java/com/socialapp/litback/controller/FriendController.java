@@ -1,6 +1,7 @@
 package com.socialapp.litback.controller;
 
 import com.socialapp.litback.model.FriendRequest;
+import com.socialapp.litback.model.Friendship;
 import com.socialapp.litback.model.UserProfile;
 import com.socialapp.litback.service.FriendService;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +21,30 @@ public class FriendController {
   @GetMapping("/search")
   public ResponseEntity<List<UserProfile>> search(@RequestParam String q) {
     return ResponseEntity.ok(friendService.search(q));
+  }
+
+  @PostMapping
+  public ResponseEntity<Friendship> connect(
+      @RequestParam String friendId,
+      @RequestHeader(value = "X-User-Id", required = false) String currentUserId) {
+    if (currentUserId == null || currentUserId.isBlank()) {
+      return ResponseEntity.status(401).build();
+    }
+    if (currentUserId.equals(friendId)) {
+      return ResponseEntity.status(400).build();
+    }
+    return ResponseEntity.ok(friendService.connect(currentUserId, friendId));
+  }
+
+  @DeleteMapping
+  public ResponseEntity<Void> disconnect(
+      @RequestParam String friendId,
+      @RequestHeader(value = "X-User-Id", required = false) String currentUserId) {
+    if (currentUserId == null || currentUserId.isBlank()) {
+      return ResponseEntity.status(401).build();
+    }
+    friendService.disconnect(currentUserId, friendId);
+    return ResponseEntity.noContent().build();
   }
 
   @PostMapping("/requests")

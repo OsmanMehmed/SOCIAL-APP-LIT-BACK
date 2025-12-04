@@ -9,9 +9,11 @@ import java.util.Optional;
 @Service
 public class ProfileService {
   private final ProfileDao profileDao;
+  private final FriendService friendService;
 
-  public ProfileService(ProfileDao profileDao) {
+  public ProfileService(ProfileDao profileDao, FriendService friendService) {
     this.profileDao = profileDao;
+    this.friendService = friendService;
   }
 
   public Optional<UserProfile> getProfile(String id) {
@@ -29,17 +31,18 @@ public class ProfileService {
       return Optional.empty();
     }
     final String finalLookup = lookupId;
-    return profileDao.findById(finalLookup).map(profile ->
-        new UserProfile(
-            profile.id(),
-            profile.username(),
-            profile.subtitle(),
-            profile.friend(),
-            profile.banned(),
-            profile.avatarUrl(),
-            currentUserId != null && currentUserId.equals(finalLookup)
-        )
-    );
+    return profileDao.findById(finalLookup).map(profile -> {
+      boolean isOwnProfile = currentUserId != null && currentUserId.equals(profile.id());
+      boolean isFriend = !isOwnProfile && friendService.isFriend(currentUserId, profile.id());
+      return new UserProfile(
+          profile.id(),
+          profile.username(),
+          profile.subtitle(),
+          isFriend,
+          profile.banned(),
+          profile.avatarUrl(),
+          isOwnProfile);
+    });
   }
 
   public boolean vetProfile(String id, boolean banned) {

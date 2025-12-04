@@ -53,7 +53,7 @@ INSERT INTO sessions (token, user_id, expires_at) VALUES
 -- Insert test friendships
 INSERT INTO friends (id, user_id, friend_id) VALUES
 ('friend-1', 'user-1', 'user-2'),
-('friend-2', 'user-2', 'user-1');
+('friend-2', 'user-2', 'user-3');
 
 -- Insert test friend requests
 INSERT INTO friend_requests (id, from_user_id, to_user_id, status) VALUES

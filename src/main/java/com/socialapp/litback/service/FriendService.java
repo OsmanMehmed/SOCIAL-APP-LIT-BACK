@@ -2,6 +2,7 @@ package com.socialapp.litback.service;
 
 import com.socialapp.litback.dao.FriendDao;
 import com.socialapp.litback.model.FriendRequest;
+import com.socialapp.litback.model.Friendship;
 import com.socialapp.litback.model.UserProfile;
 import org.springframework.stereotype.Service;
 
@@ -33,5 +34,17 @@ public class FriendService {
 
   public List<UserProfile> listFriends(String userId) {
     return friendDao.listFriends(userId);
+  }
+
+  public Friendship connect(String userId, String friendId) {
+    return friendDao.createFriendship(userId, friendId);
+  }
+
+  public void disconnect(String userId, String friendId) {
+    friendDao.deleteFriendship(userId, friendId);
+  }
+
+  public boolean isFriend(String userId, String friendId) {
+    return friendDao.existsFriendship(userId, friendId);
   }
 }

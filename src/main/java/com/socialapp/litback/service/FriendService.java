@@ -47,4 +47,8 @@ public class FriendService {
   public boolean isFriend(String userId, String friendId) {
     return friendDao.existsFriendship(userId, friendId);
   }
+
+  public List<UserProfile> randomProfiles(int limit) {
+    return friendDao.randomProfiles(limit);
+  }
 }

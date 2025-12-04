@@ -72,13 +72,18 @@ public class FriendDao {
     return jdbcTemplate.query(sql, this::mapRequest, userId);
   }
 
-  public List<UserProfile> listFriends(String userId) {
+  public List<UserProfile> listFriends(String userId) {    
     String sql = new StringBuilder()
         .append("SELECT u.id, u.username, u.subtitle, TRUE AS friend, u.banned, u.avatar_url ")
         .append("FROM friends f ")
         .append("JOIN users u ON (u.id = f.friend_id) ")
         .append("WHERE f.user_id = ?")
         .toString();
+
+    if (sql == null) {
+      throw new IllegalArgumentException("sql is null");
+    }
+    
     return jdbcTemplate.query(sql, this::mapProfile, userId);
   }
 
@@ -119,5 +124,14 @@ public class FriendDao {
         userId,
         friendId);
     return count != null && count > 0;
+  }
+
+  public List<UserProfile> randomProfiles(int limit) {
+    int safeLimit = Math.max(1, Math.min(limit, 20));
+    String sql = "SELECT id, username, subtitle, friend, banned, avatar_url "
+        + "FROM users "
+        + "ORDER BY RAND() "
+        + "FETCH FIRST ? ROWS ONLY";
+    return jdbcTemplate.query(sql, this::mapProfile, safeLimit);
   }
 }

@@ -77,4 +77,8 @@ public class PostService {
         .setBanned(postId, banned)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, Constants.ERR_POST_NOT_FOUND));
   }
+
+  public List<Post> randomPosts(int limit, String userId) {
+    return postDao.randomPosts(limit, userId);
+  }
 }

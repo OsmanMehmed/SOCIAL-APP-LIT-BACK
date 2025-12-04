@@ -23,6 +23,12 @@ public class FriendController {
     return ResponseEntity.ok(friendService.search(q));
   }
 
+  @GetMapping("/random")
+  public ResponseEntity<List<UserProfile>> random(
+      @RequestParam(defaultValue = "5") int limit) {
+    return ResponseEntity.ok(friendService.randomProfiles(limit));
+  }
+
   @GetMapping("/status")
   public ResponseEntity<Boolean> status(
       @RequestParam String friendId,

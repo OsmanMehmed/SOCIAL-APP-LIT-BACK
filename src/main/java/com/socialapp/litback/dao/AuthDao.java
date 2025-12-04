@@ -21,7 +21,8 @@ public class AuthDao {
     this.jdbcTemplate = jdbcTemplate;
   }
 
-  private UserProfile mapUserProfile(String id, String username, String subtitle, boolean friend, boolean banned, String avatarUrl) {
+  private UserProfile mapUserProfile(String id, String username, String subtitle, boolean friend, boolean banned,
+      String avatarUrl) {
     return new UserProfile(id, username, subtitle, friend, banned, avatarUrl, false);
   }
 
@@ -31,15 +32,18 @@ public class AuthDao {
         .append("FROM users WHERE username = ? AND password = ?")
         .toString();
     try {
-      UserProfile profile = jdbcTemplate.queryForObject(sql, (rs, rowNum) ->
-          mapUserProfile(
-              rs.getString("id"),
-              "@" + rs.getString("username"),
-              rs.getString("subtitle"),
-              rs.getBoolean("friend"),
-              rs.getBoolean("banned"),
-              rs.getString("avatar_url")
-      ), request.username(), request.password());
+
+      if (sql == null) {
+        throw new IllegalArgumentException("sql is null");
+      }
+
+      UserProfile profile = jdbcTemplate.queryForObject(sql, (rs, rowNum) -> mapUserProfile(
+          rs.getString("id"),
+          "@" + rs.getString("username"),
+          rs.getString("subtitle"),
+          rs.getBoolean("friend"),
+          rs.getBoolean("banned"),
+          rs.getString("avatar_url")), request.username(), request.password());
       profile = Objects.requireNonNull(profile, "Profile must not be null");
       String token = UUID.randomUUID().toString();
       jdbcTemplate.update(
@@ -56,7 +60,8 @@ public class AuthDao {
     jdbcTemplate.update(
         "INSERT INTO users (id, username, password, subtitle) VALUES (?, ?, ?, ?)",
         userId, request.username(), request.password(), Constants.DEFAULT_USER_SUBTITLE);
-    UserProfile profile = new UserProfile(userId, "@" + request.username(), Constants.DEFAULT_USER_SUBTITLE, false, false, null, true);
+    UserProfile profile = new UserProfile(userId, "@" + request.username(), Constants.DEFAULT_USER_SUBTITLE, false,
+        false, null, true);
     String token = UUID.randomUUID().toString();
     jdbcTemplate.update(
         "INSERT INTO sessions (token, user_id, expires_at) VALUES (?, ?, {fn TIMESTAMPADD(SQL_TSI_HOUR, 24, CURRENT_TIMESTAMP)})",
@@ -74,15 +79,17 @@ public class AuthDao {
         .append("FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.token = ?")
         .toString();
     try {
-      UserProfile profile = jdbcTemplate.queryForObject(sql, (rs, rowNum) ->
-          mapUserProfile(
-              rs.getString("id"),
-              "@" + rs.getString("username"),
-              rs.getString("subtitle"),
-              rs.getBoolean("friend"),
-              rs.getBoolean("banned"),
-              rs.getString("avatar_url")
-          ), token);
+      if (sql == null) {
+        throw new IllegalArgumentException("sql is null");
+      }
+
+      UserProfile profile = jdbcTemplate.queryForObject(sql, (rs, rowNum) -> mapUserProfile(
+          rs.getString("id"),
+          "@" + rs.getString("username"),
+          rs.getString("subtitle"),
+          rs.getBoolean("friend"),
+          rs.getBoolean("banned"),
+          rs.getString("avatar_url")), token);
       profile = Objects.requireNonNull(profile, "Profile must not be null");
       return new AuthResponse(token, profile);
     } catch (EmptyResultDataAccessException ex) {

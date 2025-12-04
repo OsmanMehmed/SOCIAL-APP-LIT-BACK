@@ -33,6 +33,13 @@ public class PostController {
     return ResponseEntity.ok(postService.search(q, userId));
   }
 
+  @GetMapping("/random")
+  public ResponseEntity<List<Post>> randomPosts(
+      @RequestParam(defaultValue = "5") int limit,
+      @RequestHeader(value = "X-User-Id", required = false) String userId) {
+    return ResponseEntity.ok(postService.randomPosts(limit, userId));
+  }
+
   @GetMapping("/{id}")
   public ResponseEntity<Post> getPost(
       @PathVariable String id,

@@ -22,7 +22,7 @@ public class ProfileController {
       @PathVariable String id,
       @RequestHeader(value = "X-User-Id", required = false) String currentUserId,
       @RequestHeader(value = "Authorization", required = false) String authToken) {
-    // If client requested /profile/me but didn't send X-User-Id, try to resolve from Authorization token
+
     if ((id == null || "me".equals(id))
         && (currentUserId == null || "me".equals(currentUserId))
         && authToken != null && !authToken.isBlank()) {
@@ -32,7 +32,6 @@ public class ProfileController {
           currentUserId = auth.userProfile().id();
         }
       } catch (Exception ex) {
-        // ignore, fallback will produce notFound
       }
     }
     return profileService.getProfile(id, currentUserId)
@@ -50,7 +49,7 @@ public class ProfileController {
       @PathVariable String id,
       @RequestBody UserProfile profile,
       @RequestHeader(value = "X-User-Id", required = false) String currentUserId) {
-    // Validar que solo el propietario pueda actualizar su perfil
+
     if (currentUserId != null && !currentUserId.equals(id)) {
       return ResponseEntity.status(403).build();
     }
@@ -70,7 +69,7 @@ public class ProfileController {
       @PathVariable String id,
       @RequestParam(defaultValue = "true") boolean banned,
       @RequestHeader(value = "X-User-Id", required = false) String currentUserId) {
-    // Validar que no se pueda vetear a uno mismo
+        
     if (currentUserId != null && currentUserId.equals(id)) {
       return ResponseEntity.status(400).build();
     }

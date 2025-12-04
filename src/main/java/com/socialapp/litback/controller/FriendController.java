@@ -23,6 +23,19 @@ public class FriendController {
     return ResponseEntity.ok(friendService.search(q));
   }
 
+  @GetMapping("/status")
+  public ResponseEntity<Boolean> status(
+      @RequestParam String friendId,
+      @RequestHeader(value = "X-User-Id", required = false) String currentUserId) {
+    if (currentUserId == null || currentUserId.isBlank()) {
+      return ResponseEntity.status(401).build();
+    }
+    if (currentUserId.equals(friendId)) {
+      return ResponseEntity.ok(true);
+    }
+    return ResponseEntity.ok(friendService.isFriend(currentUserId, friendId));
+  }
+
   @PostMapping
   public ResponseEntity<Friendship> connect(
       @RequestParam String friendId,
@@ -52,11 +65,11 @@ public class FriendController {
       @RequestParam String from,
       @RequestParam String to,
       @RequestHeader(value = "X-User-Id", required = false) String currentUserId) {
-    // Validar que no se pueda enviar solicitud a uno mismo
+        
     if (from.equals(to)) {
       return ResponseEntity.status(400).build();
     }
-    // Validar que el usuario autenticado sea quien envía la solicitud
+
     if (currentUserId != null && !currentUserId.equals(from)) {
       return ResponseEntity.status(403).build();
     }

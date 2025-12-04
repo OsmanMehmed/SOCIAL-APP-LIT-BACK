@@ -161,7 +161,7 @@ public class PostDao {
         return candidate;
       }
     } catch (Exception ignored) {
-      // default to fallback user when lookup fails
+      
     }
     return Constants.DEFAULT_USER_ID;
   }

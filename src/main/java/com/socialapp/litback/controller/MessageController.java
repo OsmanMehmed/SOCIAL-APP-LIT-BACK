@@ -27,11 +27,11 @@ public class MessageController {
       @RequestParam String a,
       @RequestParam String b,
       @RequestHeader(value = "X-User-Id", required = false) String currentUserId) {
-    // Validar que no se pueda crear conversación consigo mismo
+
     if (a.equals(b)) {
       return ResponseEntity.status(400).build();
     }
-    // Validar que el usuario autenticado sea uno de los participantes
+
     if (currentUserId != null && !currentUserId.equals(a) && !currentUserId.equals(b)) {
       return ResponseEntity.status(403).build();
     }
@@ -50,7 +50,7 @@ public class MessageController {
       @PathVariable String conversationId,
       @RequestBody SendMessageRequest payload,
       @RequestHeader(value = "X-User-Id", required = false) String currentUserId) {
-    // Validar que el usuario autenticado sea quien envía el mensaje
+        
     if (currentUserId != null && !currentUserId.equals(payload.fromUserId())) {
       return ResponseEntity.status(403).build();
     }

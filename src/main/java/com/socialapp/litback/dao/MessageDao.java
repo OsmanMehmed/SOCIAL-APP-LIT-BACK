@@ -47,6 +47,10 @@ public class MessageDao {
     jdbcTemplate.update(
         "INSERT INTO messages (id, conversation_id, from_user, to_user, text, sent_at) VALUES (?, ?, ?, ?, ?, ?)",
         id, conversationId, from, to, text, now);
+    jdbcTemplate.update(
+        "UPDATE conversations SET updated_at = ? WHERE id = ?",
+        now,
+        conversationId);
     return new DirectMessage(id, conversationId, from, to, text, now.toInstant());
   }
 
@@ -55,15 +59,26 @@ public class MessageDao {
   }
 
   public Conversation createConversation(String a, String b) {
+    Conversation existing = findConversation(a, b);
+    if (existing != null) {
+      return existing;
+    }
     String id = UUID.randomUUID().toString();
+    Timestamp now = Timestamp.from(Instant.now());
     jdbcTemplate.update(
-        "INSERT INTO conversations (id, participant_a, participant_b, updated_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP)",
-        id, a, b);
-    return new Conversation(id, a, b, Instant.now());
+        "INSERT INTO conversations (id, participant_a, participant_b, updated_at) VALUES (?, ?, ?, ?)",
+        id, a, b, now);
+    return new Conversation(id, a, b, now.toInstant());
   }
 
   public List<Conversation> listConversations(String userId) {
     String sql = "SELECT id, participant_a, participant_b, updated_at FROM conversations WHERE participant_a = ? OR participant_b = ? ORDER BY updated_at DESC";
     return jdbcTemplate.query(sql, this::mapConversation, userId, userId);
+  }
+
+  private Conversation findConversation(String a, String b) {
+    String sql = "SELECT id, participant_a, participant_b, updated_at FROM conversations WHERE (participant_a = ? AND participant_b = ?) OR (participant_a = ? AND participant_b = ?)";
+    List<Conversation> matches = jdbcTemplate.query(sql, this::mapConversation, a, b, b, a);
+    return matches.isEmpty() ? null : matches.get(0);
   }
 }

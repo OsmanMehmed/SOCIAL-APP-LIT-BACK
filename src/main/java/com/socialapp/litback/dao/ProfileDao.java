@@ -33,7 +33,7 @@ public class ProfileDao {
     try {
       return Optional.ofNullable(jdbcTemplate.queryForObject(sqlById, this::mapProfile, id));
     } catch (EmptyResultDataAccessException ex) {
-      // fallback: buscar por username (quita prefijo @ si viene)
+      
       final String username = id.replace("@", "");
       final String sqlByUsername =
           "SELECT id, username, subtitle, friend, banned, avatar_url FROM users WHERE username = ?";

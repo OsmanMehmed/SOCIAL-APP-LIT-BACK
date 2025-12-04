@@ -11,6 +11,7 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -270,13 +271,11 @@ public class PostDao {
 
   public List<Post> randomPosts(int limit, String userId) {
     int safeLimit = Math.max(1, Math.min(limit, 20));
-    String sql =
-        "SELECT p.id, p.caption, p.author_id, p.likes, p.comments, p.saves, p.banned, "
-            + "CASE WHEN pl.user_id IS NULL THEN FALSE ELSE TRUE END AS liked "
-            + "FROM posts p "
-            + "LEFT JOIN post_likes pl ON pl.post_id = p.id AND pl.user_id = ? "
-            + "ORDER BY RAND() "
-            + "FETCH FIRST ? ROWS ONLY";
-    return jdbcTemplate.query(sql, this::mapPost, userId, safeLimit);
+    List<Post> entries = listAll(userId);
+    if (entries.isEmpty()) {
+      return entries;
+    }
+    Collections.shuffle(entries);
+    return entries.subList(0, Math.min(safeLimit, entries.size()));
   }
 }

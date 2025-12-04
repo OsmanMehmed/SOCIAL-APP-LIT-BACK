@@ -7,6 +7,7 @@ import com.socialapp.litback.shared.Constants;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -128,10 +129,12 @@ public class FriendDao {
 
   public List<UserProfile> randomProfiles(int limit) {
     int safeLimit = Math.max(1, Math.min(limit, 20));
-    String sql = "SELECT id, username, subtitle, friend, banned, avatar_url "
-        + "FROM users "
-        + "ORDER BY RAND() "
-        + "FETCH FIRST ? ROWS ONLY";
-    return jdbcTemplate.query(sql, this::mapProfile, safeLimit);
+    String sql = "SELECT id, username, subtitle, friend, banned, avatar_url FROM users";
+    List<UserProfile> entries = jdbcTemplate.query(sql, this::mapProfile);
+    if (entries.isEmpty()) {
+      return entries;
+    }
+    Collections.shuffle(entries);
+    return entries.subList(0, Math.min(safeLimit, entries.size()));
   }
 }

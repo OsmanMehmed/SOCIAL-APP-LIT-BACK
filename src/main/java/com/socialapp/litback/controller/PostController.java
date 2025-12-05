@@ -4,6 +4,7 @@ import com.socialapp.litback.model.Comment;
 import com.socialapp.litback.model.Post;
 import com.socialapp.litback.model.PostDetails;
 import com.socialapp.litback.service.PostService;
+import com.socialapp.litback.shared.Constants;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -35,7 +36,7 @@ public class PostController {
 
   @GetMapping("/random")
   public ResponseEntity<List<Post>> randomPosts(
-      @RequestParam(defaultValue = "3") int limit,
+      @RequestParam(defaultValue = Constants.DEFAULT_RANDOM_LIMIT) int limit,
       @RequestHeader(value = "X-User-Id", required = false) String userId) {
     return ResponseEntity.ok(postService.randomPosts(limit, userId));
   }

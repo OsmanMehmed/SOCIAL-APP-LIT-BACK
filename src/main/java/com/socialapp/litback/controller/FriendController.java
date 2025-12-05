@@ -4,6 +4,7 @@ import com.socialapp.litback.model.FriendRequest;
 import com.socialapp.litback.model.Friendship;
 import com.socialapp.litback.model.UserProfile;
 import com.socialapp.litback.service.FriendService;
+import com.socialapp.litback.shared.Constants;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,7 +26,7 @@ public class FriendController {
 
   @GetMapping("/random")
   public ResponseEntity<List<UserProfile>> random(
-      @RequestParam(defaultValue = "3") int limit) {
+      @RequestParam(defaultValue = Constants.DEFAULT_RANDOM_LIMIT) int limit) {
     return ResponseEntity.ok(friendService.randomProfiles(limit));
   }
 

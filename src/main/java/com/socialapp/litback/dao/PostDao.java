@@ -216,6 +216,7 @@ public class PostDao {
 
   private String normalizePostId(String id) {
     if (id == null || id.isBlank()) return id;
+    if (id.length() > 32) return id;
     return id.startsWith(Constants.POST_PREFIX) ? id : Constants.POST_PREFIX + id;
   }
 

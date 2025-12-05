@@ -2,6 +2,8 @@ package com.socialapp.litback.model;
 
 public record Post(
     String id,
+    String title,
+    String description,
     String caption,
     String authorId,
     String imageUrl,

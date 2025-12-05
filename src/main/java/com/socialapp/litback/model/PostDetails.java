@@ -5,6 +5,8 @@ import java.util.List;
 
 public record PostDetails(
     String id,
+    String title,
+    String description,
     String caption,
     String authorId,
     String imageUrl,
@@ -14,4 +16,5 @@ public record PostDetails(
     boolean banned,
     Boolean liked,
     List<Comment> commentsList,
+    List<String> imageUrls,
     Instant updatedAt) {}

@@ -7,4 +7,6 @@ public record UserProfile(
     boolean friend,
     boolean banned,
     String avatarUrl,
+    String url,
+    boolean admin,
     boolean isOwnProfile) {}

@@ -24,19 +24,21 @@ public class ProfileDao {
         rs.getBoolean("friend"),
         rs.getBoolean("banned"),
         rs.getString("avatar_url"),
+        rs.getString("url"),
+        rs.getBoolean("admin"),
         false);
   }
 
   public Optional<UserProfile> findById(String id) {
     final String sqlById =
-        "SELECT id, username, subtitle, friend, banned, avatar_url FROM users WHERE id = ?";
+        "SELECT id, username, subtitle, friend, banned, avatar_url, url, admin FROM users WHERE id = ?";
     try {
       return Optional.ofNullable(jdbcTemplate.queryForObject(sqlById, this::mapProfile, id));
     } catch (EmptyResultDataAccessException ex) {
       
       final String username = id.replace("@", "");
       final String sqlByUsername =
-          "SELECT id, username, subtitle, friend, banned, avatar_url FROM users WHERE username = ?";
+          "SELECT id, username, subtitle, friend, banned, avatar_url, url, admin FROM users WHERE username = ?";
       try {
         return Optional.ofNullable(
             jdbcTemplate.queryForObject(sqlByUsername, this::mapProfile, username));
@@ -49,24 +51,27 @@ public class ProfileDao {
   public UserProfile create(UserProfile profile) {
     String id = profile.id() != null ? profile.id() : UUID.randomUUID().toString();
     jdbcTemplate.update(
-        "INSERT INTO users (id, username, subtitle, friend, banned, avatar_url, password) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO users (id, username, subtitle, friend, banned, avatar_url, url, admin, password) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
         id,
         profile.username().replace("@", ""),
         profile.subtitle(),
         profile.friend(),
         profile.banned(),
         profile.avatarUrl(),
+        profile.url(),
+        profile.admin(),
         "password123");
-    return new UserProfile(id, profile.username(), profile.subtitle(), profile.friend(), profile.banned(), profile.avatarUrl(), false);
+    return new UserProfile(id, profile.username(), profile.subtitle(), profile.friend(), profile.banned(), profile.avatarUrl(), profile.url(), profile.admin(), false);
   }
 
   public UserProfile update(UserProfile profile) {
     jdbcTemplate.update(
-        "UPDATE users SET subtitle = ?, friend = ?, banned = ?, avatar_url = ? WHERE id = ?",
+        "UPDATE users SET username = ?, subtitle = ?, avatar_url = ?, url = ?, admin = ? WHERE id = ?",
+        profile.username().replace("@", ""),
         profile.subtitle(),
-        profile.friend(),
-        profile.banned(),
         profile.avatarUrl(),
+        profile.url(),
+        profile.admin(),
         profile.id());
     return profile;
   }
@@ -82,5 +87,22 @@ public class ProfileDao {
       updated = jdbcTemplate.update("UPDATE users SET banned = ? WHERE username = ?", banned, username);
     }
     return updated > 0;
+  }
+
+  public boolean isAdmin(String id) {
+    if (id == null || id.isBlank()) return false;
+    final String username = id.replace("@", "");
+    Integer flag = jdbcTemplate.queryForObject(
+        "SELECT admin FROM users WHERE id = ?",
+        Integer.class,
+        id);
+    if (flag != null) {
+      return flag == 1;
+    }
+    flag = jdbcTemplate.queryForObject(
+        "SELECT admin FROM users WHERE username = ?",
+        Integer.class,
+        username);
+    return flag != null && flag == 1;
   }
 }

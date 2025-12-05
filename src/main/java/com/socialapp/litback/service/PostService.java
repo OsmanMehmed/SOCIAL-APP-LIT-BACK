@@ -44,6 +44,10 @@ public class PostService {
     return postDao.create(post);
   }
 
+  public PostDetails createWithImages(Post post, List<String> imageUrls) {
+    return postDao.createWithImages(post, imageUrls);
+  }
+
   public PostDetails update(Post post) {
     return postDao.update(post);
   }

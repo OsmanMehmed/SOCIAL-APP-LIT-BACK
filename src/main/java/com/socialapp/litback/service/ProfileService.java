@@ -41,6 +41,8 @@ public class ProfileService {
           isFriend,
           profile.banned(),
           profile.avatarUrl(),
+          profile.url(),
+          profile.admin(),
           isOwnProfile);
     });
   }
@@ -59,5 +61,9 @@ public class ProfileService {
 
   public void deleteProfile(String id) {
     profileDao.delete(id);
+  }
+
+  public boolean isAdmin(String id) {
+    return profileDao.isAdmin(id);
   }
 }

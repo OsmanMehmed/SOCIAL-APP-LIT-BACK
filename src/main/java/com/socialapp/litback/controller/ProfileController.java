@@ -50,12 +50,24 @@ public class ProfileController {
       @RequestBody UserProfile profile,
       @RequestHeader(value = "X-User-Id", required = false) String currentUserId) {
 
-    if (currentUserId != null && !currentUserId.equals(id)) {
+    if (currentUserId != null && !currentUserId.equals(id) && !profileService.isAdmin(currentUserId)) {
       return ResponseEntity.status(403).build();
     }
-    UserProfile updated = profileService.updateProfile(
-        new UserProfile(id, profile.username(), profile.subtitle(), profile.friend(), profile.banned(), profile.avatarUrl(), id.equals(currentUserId)));
-    return ResponseEntity.ok(updated);
+    return profileService.getProfile(id, currentUserId)
+        .map(existing -> {
+          UserProfile updated = new UserProfile(
+              id,
+              profile.username(),
+              profile.subtitle(),
+              existing.friend(),
+              existing.banned(),
+              profile.avatarUrl() != null ? profile.avatarUrl() : existing.avatarUrl(),
+              profile.url(),
+              existing.admin(),
+              true);
+          return ResponseEntity.ok(profileService.updateProfile(updated));
+        })
+        .orElseGet(() -> ResponseEntity.notFound().build());
   }
 
   @DeleteMapping("/{id}")

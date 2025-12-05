@@ -9,8 +9,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.ArrayList;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.io.IOException;
 
 @RestController
 @RequestMapping("/api/posts")
@@ -73,10 +80,39 @@ public class PostController {
     return ResponseEntity.ok(postService.create(post));
   }
 
+  @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  public ResponseEntity<PostDetails> createPostMultipart(
+      @RequestParam String title,
+      @RequestParam String description,
+      @RequestParam String caption,
+      @RequestHeader(value = "X-User-Id", required = false) String userId,
+      @RequestPart(required = false) List<MultipartFile> images) throws IOException {
+    String authorId = (userId == null || userId.isBlank()) ? Constants.DEFAULT_USER_ID : userId;
+    List<String> imageUrls = saveImages(images);
+    String mainImage = imageUrls.isEmpty() ? null : imageUrls.get(0);
+    Post post =
+        new Post(
+            null,
+            title,
+            description,
+            caption,
+            authorId,
+            mainImage,
+            0,
+            0,
+            0,
+            false,
+            false);
+    PostDetails created = postService.createWithImages(post, imageUrls);
+    return ResponseEntity.ok(created);
+  }
+
   @PutMapping("/{id}")
   public ResponseEntity<PostDetails> updatePost(@PathVariable String id, @RequestBody Post post) {
     return ResponseEntity.ok(postService.update(new Post(
         id,
+        post.title(),
+        post.description(),
         post.caption(),
         post.authorId(),
         post.imageUrl(),
@@ -123,5 +159,23 @@ public class PostController {
   @PostMapping("/{id}/ban")
   public ResponseEntity<Post> ban(@PathVariable String id, @RequestParam(defaultValue = "true") boolean banned) {
     return ResponseEntity.ok(postService.ban(id, banned));
+  }
+
+  private List<String> saveImages(List<MultipartFile> files) throws IOException {
+    if (files == null || files.isEmpty()) {
+      return List.of();
+    }
+    List<String> urls = new ArrayList<>();
+    Path uploadDir = Paths.get("src/main/resources/static/assets/uploads");
+    Files.createDirectories(uploadDir);
+    for (MultipartFile file : files) {
+      if (file.isEmpty()) continue;
+      String sanitizedName = file.getOriginalFilename() != null ? file.getOriginalFilename().replaceAll("[^a-zA-Z0-9._-]", "_") : "image";
+      String filename = java.util.UUID.randomUUID() + "-" + sanitizedName;
+      Path target = uploadDir.resolve(filename);
+      Files.copy(file.getInputStream(), target);
+      urls.add("/api/assets/uploads/" + filename);
+    }
+    return urls;
   }
 }

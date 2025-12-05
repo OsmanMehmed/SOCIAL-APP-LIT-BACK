@@ -5,6 +5,8 @@ CREATE TABLE users (
     password VARCHAR(255) NOT NULL,
     subtitle VARCHAR(500),
     avatar_url VARCHAR(500),
+    url VARCHAR(500),
+    admin BOOLEAN DEFAULT FALSE,
     friend BOOLEAN DEFAULT FALSE,
     banned BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -14,6 +16,8 @@ CREATE TABLE users (
 CREATE TABLE posts (
     id VARCHAR(36) PRIMARY KEY,
     author_id VARCHAR(36) NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    description CLOB,
     caption CLOB NOT NULL,
     image_url VARCHAR(500),
     likes INT DEFAULT 0,
@@ -100,6 +104,8 @@ CREATE INDEX idx_friend_requests_status ON friend_requests(status);
 
 CREATE TABLE post_details (
     id VARCHAR(36) PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    description CLOB,
     caption CLOB NOT NULL,
     author_id VARCHAR(36) NOT NULL,
     image_url VARCHAR(500),
@@ -121,3 +127,12 @@ CREATE TABLE post_likes (
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
 CREATE INDEX idx_post_likes_user ON post_likes(user_id);
+
+CREATE TABLE post_images (
+    id VARCHAR(36) PRIMARY KEY,
+    post_id VARCHAR(36) NOT NULL,
+    url VARCHAR(500) NOT NULL,
+    position INT DEFAULT 0,
+    FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
+);
+CREATE INDEX idx_post_images_post ON post_images(post_id);

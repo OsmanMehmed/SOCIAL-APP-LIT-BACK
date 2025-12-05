@@ -27,6 +27,8 @@ public class FriendDao {
         rs.getBoolean("friend"),
         rs.getBoolean("banned"),
         rs.getString("avatar_url"),
+        rs.getString("url"),
+        rs.getBoolean("admin"),
         false);
   }
 
@@ -43,7 +45,7 @@ public class FriendDao {
   }
 
   public List<UserProfile> search(String query) {
-    String sql = "SELECT id, username, subtitle, friend, banned, avatar_url FROM users WHERE username LIKE ?";
+    String sql = "SELECT id, username, subtitle, friend, banned, avatar_url, url, admin FROM users WHERE username LIKE ?";
     return jdbcTemplate.query(sql, this::mapProfile, "%" + query + "%");
   }
 
@@ -75,7 +77,7 @@ public class FriendDao {
 
   public List<UserProfile> listFriends(String userId) {    
     String sql = new StringBuilder()
-        .append("SELECT u.id, u.username, u.subtitle, TRUE AS friend, u.banned, u.avatar_url ")
+        .append("SELECT u.id, u.username, u.subtitle, TRUE AS friend, u.banned, u.avatar_url, u.url, u.admin ")
         .append("FROM friends f ")
         .append("JOIN users u ON (u.id = f.friend_id) ")
         .append("WHERE f.user_id = ?")
@@ -129,7 +131,7 @@ public class FriendDao {
 
   public List<UserProfile> randomProfiles(int limit) {
     int safeLimit = Math.max(1, Math.min(limit, 20));
-    String sql = "SELECT id, username, subtitle, friend, banned, avatar_url FROM users";
+    String sql = "SELECT id, username, subtitle, friend, banned, avatar_url, url, admin FROM users";
     List<UserProfile> entries = jdbcTemplate.query(sql, this::mapProfile);
     if (entries.isEmpty()) {
       return entries;

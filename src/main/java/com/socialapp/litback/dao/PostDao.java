@@ -28,6 +28,8 @@ public class PostDao {
     boolean liked = hasColumn(rs, "liked") && rs.getBoolean("liked");
     return new Post(
         rs.getString("id"),
+        rs.getString("title"),
+        rs.getString("description"),
         rs.getString("caption"),
         rs.getString("author_id"),
         rs.getString("image_url"),
@@ -59,7 +61,7 @@ public class PostDao {
 
   public List<Post> listAll(String userId) {
     String sql =
-        "SELECT p.id, p.caption, p.author_id, p.image_url, p.likes, p.comments, p.saves, p.banned, "
+        "SELECT p.id, p.title, p.description, p.caption, p.author_id, p.image_url, p.likes, p.comments, p.saves, p.banned, "
             + "CASE WHEN pl.user_id IS NULL THEN FALSE ELSE TRUE END AS liked "
             + "FROM posts p "
             + "LEFT JOIN post_likes pl ON pl.post_id = p.id AND pl.user_id = ? "
@@ -69,7 +71,7 @@ public class PostDao {
 
   public List<Post> listByAuthor(String authorId, String userId) {
     String sql =
-        "SELECT p.id, p.caption, p.author_id, p.image_url, p.likes, p.comments, p.saves, p.banned, "
+        "SELECT p.id, p.title, p.description, p.caption, p.author_id, p.image_url, p.likes, p.comments, p.saves, p.banned, "
             + "CASE WHEN pl.user_id IS NULL THEN FALSE ELSE TRUE END AS liked "
             + "FROM posts p "
             + "LEFT JOIN post_likes pl ON pl.post_id = p.id AND pl.user_id = ? "
@@ -81,7 +83,7 @@ public class PostDao {
   public List<Post> searchByCaption(String query, String userId) {
     String like = "%" + query.toLowerCase() + "%";
     String sql =
-        "SELECT p.id, p.caption, p.author_id, p.image_url, p.likes, p.comments, p.saves, p.banned, "
+        "SELECT p.id, p.title, p.description, p.caption, p.author_id, p.image_url, p.likes, p.comments, p.saves, p.banned, "
             + "CASE WHEN pl.user_id IS NULL THEN FALSE ELSE TRUE END AS liked "
             + "FROM posts p "
             + "LEFT JOIN post_likes pl ON pl.post_id = p.id AND pl.user_id = ? "
@@ -92,7 +94,7 @@ public class PostDao {
 
   public Optional<Post> findById(String id, String userId) {
     String sql =
-        "SELECT p.id, p.caption, p.author_id, p.image_url, p.likes, p.comments, p.saves, p.banned, "
+        "SELECT p.id, p.title, p.description, p.caption, p.author_id, p.image_url, p.likes, p.comments, p.saves, p.banned, "
             + "CASE WHEN pl.user_id IS NULL THEN FALSE ELSE TRUE END AS liked "
             + "FROM posts p "
             + "LEFT JOIN post_likes pl ON pl.post_id = p.id AND pl.user_id = ? "
@@ -114,27 +116,95 @@ public class PostDao {
   }
 
   public PostDetails create(Post post) {
+    return createWithImages(post, Collections.emptyList());
+  }
+
+  public PostDetails createWithImages(Post post, List<String> imageUrls) {
     String id = post.id() != null ? post.id() : UUID.randomUUID().toString();
     String finalId = normalizePostId(id);
-    String imageUrl = resolveImageUrl(post.imageUrl());
+    String imageUrl =
+        resolveImageUrl(!imageUrls.isEmpty() ? imageUrls.get(0) : post.imageUrl());
     jdbcTemplate.update(
-        "INSERT INTO posts (id, caption, author_id, image_url, likes, comments, saves, banned, updated_at) VALUES (?, ?, ?, ?, 0, 0, 0, ?, CURRENT_TIMESTAMP)",
-        finalId, post.caption(), resolveAuthorId(post.authorId()), imageUrl, post.banned());
+        "INSERT INTO posts (id, title, description, caption, author_id, image_url, likes, comments, saves, banned, updated_at) VALUES (?, ?, ?, ?, ?, ?, 0, 0, 0, ?, CURRENT_TIMESTAMP)",
+        finalId,
+        post.title(),
+        post.description(),
+        post.caption(),
+        resolveAuthorId(post.authorId()),
+        imageUrl,
+        post.banned());
     jdbcTemplate.update(
-        "INSERT INTO post_details (id, caption, author_id, image_url, likes, comments, saves, banned, updated_at) VALUES (?, ?, ?, ?, 0, 0, 0, ?, CURRENT_TIMESTAMP)",
-        finalId, post.caption(), resolveAuthorId(post.authorId()), imageUrl, post.banned());
-    return new PostDetails(finalId, post.caption(), post.authorId(), imageUrl, 0, 0, 0, post.banned(), false, List.of(), Instant.now());
+        "INSERT INTO post_details (id, title, description, caption, author_id, image_url, likes, comments, saves, banned, updated_at) VALUES (?, ?, ?, ?, ?, ?, 0, 0, 0, ?, CURRENT_TIMESTAMP)",
+        finalId,
+        post.title(),
+        post.description(),
+        post.caption(),
+        resolveAuthorId(post.authorId()),
+        imageUrl,
+        post.banned());
+    if (!imageUrls.isEmpty()) {
+      insertImages(finalId, imageUrls);
+    }
+    return new PostDetails(
+        finalId,
+        post.title(),
+        post.description(),
+        post.caption(),
+        post.authorId(),
+        imageUrl,
+        0,
+        0,
+        0,
+        post.banned(),
+        false,
+        List.of(),
+        imageUrls.isEmpty() ? List.of(imageUrl) : imageUrls,
+        Instant.now());
   }
 
   public PostDetails update(Post post) {
     String imageUrl = resolveExistingImage(post.id(), post.imageUrl());
     jdbcTemplate.update(
-        "UPDATE posts SET caption = ?, likes = ?, comments = ?, saves = ?, banned = ?, image_url = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
-        post.caption(), post.likes(), post.comments(), post.saves(), post.banned(), imageUrl, post.id());
+        "UPDATE posts SET title = ?, description = ?, caption = ?, likes = ?, comments = ?, saves = ?, banned = ?, image_url = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+        post.title(),
+        post.description(),
+        post.caption(),
+        post.likes(),
+        post.comments(),
+        post.saves(),
+        post.banned(),
+        imageUrl,
+        post.id());
     jdbcTemplate.update(
-        "UPDATE post_details SET caption = ?, likes = ?, comments = ?, saves = ?, banned = ?, image_url = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
-        post.caption(), post.likes(), post.comments(), post.saves(), post.banned(), imageUrl, post.id());
-    return new PostDetails(post.id(), post.caption(), post.authorId(), imageUrl, post.likes(), post.comments(), post.saves(), post.banned(), post.liked(), List.of(), Instant.now());
+        "UPDATE post_details SET title = ?, description = ?, caption = ?, likes = ?, comments = ?, saves = ?, banned = ?, image_url = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+        post.title(),
+        post.description(),
+        post.caption(),
+        post.likes(),
+        post.comments(),
+        post.saves(),
+        post.banned(),
+        imageUrl,
+        post.id());
+    List<String> images = fetchImages(post.id());
+    if (images.isEmpty()) {
+      images = List.of(imageUrl);
+    }
+    return new PostDetails(
+        post.id(),
+        post.title(),
+        post.description(),
+        post.caption(),
+        post.authorId(),
+        imageUrl,
+        post.likes(),
+        post.comments(),
+        post.saves(),
+        post.banned(),
+        post.liked(),
+        List.of(),
+        images,
+        Instant.now());
   }
 
   public void delete(String id) {
@@ -195,6 +265,26 @@ public class PostDao {
       }
     }
     return Constants.DEFAULT_POST_IMAGE_URL;
+  }
+
+  private void insertImages(String postId, List<String> urls) {
+    jdbcTemplate.update("DELETE FROM post_images WHERE post_id = ?", postId);
+    for (int i = 0; i < urls.size(); i++) {
+      jdbcTemplate.update(
+          "INSERT INTO post_images (id, post_id, url, position) VALUES (?, ?, ?, ?)",
+          UUID.randomUUID().toString(),
+          postId,
+          urls.get(i),
+          i);
+    }
+  }
+
+  private List<String> fetchImages(String postId) {
+    String sql = "SELECT url FROM post_images WHERE post_id = ? ORDER BY position ASC";
+    return jdbcTemplate.query(
+        sql,
+        (rs, rowNum) -> rs.getString("url"),
+        postId);
   }
   
   public Comment addComment(Comment comment) {

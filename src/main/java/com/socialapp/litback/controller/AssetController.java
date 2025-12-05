@@ -5,6 +5,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.MediaTypeFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -27,7 +28,7 @@ public class AssetController {
     }
 
     MediaType mediaType =
-        safeFile.endsWith(".svg") ? MediaType.valueOf("image/svg+xml") : MediaType.APPLICATION_OCTET_STREAM;
+        MediaTypeFactory.getMediaType(resource).orElse(MediaType.APPLICATION_OCTET_STREAM);
     return ResponseEntity.ok()
         .header(HttpHeaders.CACHE_CONTROL, "max-age=86400, public")
         .contentType(mediaType)

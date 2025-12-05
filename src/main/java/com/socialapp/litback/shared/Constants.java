@@ -13,5 +13,5 @@ public final class Constants {
   public static final String DEFAULT_USER_ID = "user-1";
   public static final String POST_PREFIX = "post-";
   public static final String DEFAULT_POST_IMAGE_URL =
-      "/api/assets/posts/post-default.svg";
+      "/api/assets/posts/post-default.jpg";
 }

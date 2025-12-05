@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+  <defs>
+    <linearGradient id="gradPan" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f3c623"/>
+      <stop offset="100%" stop-color="#d78100"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="600" rx="36" fill="url(#gradPan)"/>
+  <text x="50%" y="45%" font-size="70" font-family="Georgia, serif" text-anchor="middle" fill="#5a1f00">
+    Pan casero
+  </text>
+  <text x="50%" y="62%" font-size="40" font-family="sans-serif" text-anchor="middle" fill="#5a1f00">
+    masa lenta & crujiente
+  </text>
+</svg>

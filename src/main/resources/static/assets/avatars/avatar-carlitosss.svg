@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="gradCarl" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ff9a9e"/>
+      <stop offset="100%" stop-color="#fecfef"/>
+    </linearGradient>
+  </defs>
+  <rect width="200" height="200" rx="32" fill="url(#gradCarl)"/>
+  <circle cx="100" cy="80" r="45" fill="rgba(255,255,255,0.85)"/>
+  <text x="100" y="145" font-size="24" font-weight="bold" font-family="sans-serif" text-anchor="middle" fill="#d44161">
+    Carlo
+  </text>
+</svg>

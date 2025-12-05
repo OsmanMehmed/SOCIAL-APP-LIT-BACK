@@ -35,7 +35,7 @@ public class PostController {
 
   @GetMapping("/random")
   public ResponseEntity<List<Post>> randomPosts(
-      @RequestParam(defaultValue = "5") int limit,
+      @RequestParam(defaultValue = "3") int limit,
       @RequestHeader(value = "X-User-Id", required = false) String userId) {
     return ResponseEntity.ok(postService.randomPosts(limit, userId));
   }
@@ -74,7 +74,16 @@ public class PostController {
 
   @PutMapping("/{id}")
   public ResponseEntity<PostDetails> updatePost(@PathVariable String id, @RequestBody Post post) {
-    return ResponseEntity.ok(postService.update(new Post(id, post.caption(), post.authorId(), post.likes(), post.comments(), post.saves(), post.banned(), post.liked())));
+    return ResponseEntity.ok(postService.update(new Post(
+        id,
+        post.caption(),
+        post.authorId(),
+        post.imageUrl(),
+        post.likes(),
+        post.comments(),
+        post.saves(),
+        post.banned(),
+        post.liked())));
   }
 
   @DeleteMapping("/{id}")

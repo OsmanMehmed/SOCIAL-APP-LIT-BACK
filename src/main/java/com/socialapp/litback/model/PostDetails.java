@@ -7,6 +7,7 @@ public record PostDetails(
     String id,
     String caption,
     String authorId,
+    String imageUrl,
     int likes,
     int comments,
     int saves,

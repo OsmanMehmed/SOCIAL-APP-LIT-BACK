@@ -25,7 +25,7 @@ public class FriendController {
 
   @GetMapping("/random")
   public ResponseEntity<List<UserProfile>> random(
-      @RequestParam(defaultValue = "5") int limit) {
+      @RequestParam(defaultValue = "3") int limit) {
     return ResponseEntity.ok(friendService.randomProfiles(limit));
   }
 

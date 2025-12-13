@@ -24,7 +24,6 @@ class ProfileAvatarUploadTest {
 
     @Test
     void uploadAvatar() throws Exception {
-        // Create a user first to ensure it exists
         UserProfile user = new UserProfile("test-user-id", "TestUser", "Subtitle", false, false, null, null, false,
                 true);
         profileService.createProfile(user);
@@ -32,7 +31,7 @@ class ProfileAvatarUploadTest {
         MockMultipartFile file = new MockMultipartFile("file", "test.png", "image/png", "some-image".getBytes());
         mockMvc.perform(multipart("/api/profiles/test-user-id/avatar")
                 .file(file)
-                .header("X-User-Id", "test-user-id")) // Assuming authorized as self
+                .header("X-User-Id", "test-user-id"))
                 .andExpect(status().isOk());
     }
 }

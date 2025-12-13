@@ -136,3 +136,10 @@ CREATE TABLE post_images (
     FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
 );
 CREATE INDEX idx_post_images_post ON post_images(post_id);
+
+CREATE TABLE post_tags (
+    post_id VARCHAR(36) NOT NULL,
+    tag VARCHAR(100) NOT NULL,
+    FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
+);
+CREATE INDEX idx_post_tags_post ON post_tags(post_id);

@@ -94,24 +94,25 @@ public class PostController {
       @RequestParam String title,
       @RequestParam String description,
       @RequestParam String caption,
+      @RequestParam(required = false) List<String> tags,
       @RequestHeader(value = "X-User-Id", required = false) String userId,
       @RequestPart(required = false) List<MultipartFile> images) throws IOException {
     String authorId = (userId == null || userId.isBlank()) ? Constants.DEFAULT_USER_ID : userId;
     List<String> imageUrls = saveImages(images);
     String mainImage = imageUrls.isEmpty() ? null : imageUrls.get(0);
-    Post post =
-        new Post(
-            null,
-            title,
-            description,
-            caption,
-            authorId,
-            mainImage,
-            0,
-            0,
-            0,
-            false,
-            false);
+    Post post = new Post(
+        null,
+        title,
+        description,
+        caption,
+        authorId,
+        mainImage,
+        0,
+        0,
+        0,
+        false,
+        false,
+        tags != null ? tags : java.util.Collections.emptyList());
     PostDetails created = postService.createWithImages(post, imageUrls);
     return ResponseEntity.ok(created);
   }
@@ -129,7 +130,8 @@ public class PostController {
         post.comments(),
         post.saves(),
         post.banned(),
-        post.liked())));
+        post.liked(),
+        post.tags())));
   }
 
   @PutMapping(value = "/{id}/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -138,6 +140,7 @@ public class PostController {
       @RequestParam String title,
       @RequestParam String description,
       @RequestParam String caption,
+      @RequestParam(required = false) List<String> tags,
       @RequestHeader(value = "X-User-Id", required = false) String userId,
       @RequestPart(required = false) List<MultipartFile> images) throws IOException {
     String authorId = (userId == null || userId.isBlank()) ? Constants.DEFAULT_USER_ID : userId;
@@ -146,19 +149,19 @@ public class PostController {
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, Constants.ERR_POST_NOT_FOUND));
     List<String> imageUrls = saveImages(images);
     String mainImage = imageUrls.isEmpty() ? null : imageUrls.get(0);
-    Post post =
-        new Post(
-            id,
-            title,
-            description,
-            caption,
-            authorId,
-            mainImage,
-            0,
-            0,
-            0,
-            false,
-            false);
+    Post post = new Post(
+        id,
+        title,
+        description,
+        caption,
+        authorId,
+        mainImage,
+        0,
+        0,
+        0,
+        false,
+        false,
+        tags != null ? tags : java.util.Collections.emptyList());
     PostDetails updated = postService.updateWithImages(post, imageUrls);
     return ResponseEntity.ok(updated);
   }
@@ -171,7 +174,8 @@ public class PostController {
 
   @PostMapping("/{id}/comments")
   public ResponseEntity<Comment> addComment(@PathVariable String id, @RequestBody Comment comment) {
-    return ResponseEntity.ok(postService.addComment(new Comment(comment.id(), id, comment.authorId(), comment.text(), comment.createdAt())));
+    return ResponseEntity.ok(
+        postService.addComment(new Comment(comment.id(), id, comment.authorId(), comment.text(), comment.createdAt())));
   }
 
   @DeleteMapping("/comments/{commentId}")
@@ -209,8 +213,11 @@ public class PostController {
     Path uploadDir = Paths.get("src/main/resources/static/assets/uploads");
     Files.createDirectories(uploadDir);
     for (MultipartFile file : files) {
-      if (file.isEmpty()) continue;
-      String sanitizedName = file.getOriginalFilename() != null ? file.getOriginalFilename().replaceAll("[^a-zA-Z0-9._-]", "_") : "image";
+      if (file.isEmpty())
+        continue;
+      String sanitizedName = file.getOriginalFilename() != null
+          ? file.getOriginalFilename().replaceAll("[^a-zA-Z0-9._-]", "_")
+          : "image";
       String filename = java.util.UUID.randomUUID() + "-" + sanitizedName;
       Path target = uploadDir.resolve(filename);
       Files.copy(file.getInputStream(), target);

@@ -23,7 +23,6 @@ public class AssetController {
     String safeFolder = folder.replaceAll("[^a-zA-Z0-9_-]", "");
     String safeFile = file.replaceAll("[^a-zA-Z0-9_.-]", "");
 
-    // Check file system first
     java.nio.file.Path uploadPath = java.nio.file.Paths.get("uploads").resolve(safeFolder).resolve(safeFile);
     Resource resource = new org.springframework.core.io.FileSystemResource(uploadPath);
 

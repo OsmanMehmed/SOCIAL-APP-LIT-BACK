@@ -13,11 +13,12 @@ import org.springframework.boot.test.context.SpringBootTest;
 @SpringBootTest
 class PostUploadTest {
 
-  @Autowired private PostService postService;
+  @Autowired
+  private PostService postService;
 
   @Test
   void createWithImagesSucceeds() {
-    Post post = new Post(null, "t", "d", "c", "user-1", null, 0, 0, 0, false, false);
+    Post post = new Post(null, "t", "d", "c", "user-1", null, 0, 0, 0, false, false, java.util.Collections.emptyList());
     PostDetails created = postService.createWithImages(post, List.of());
     assertNotNull(created.id());
   }

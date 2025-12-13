@@ -5,6 +5,11 @@ import com.socialapp.litback.service.ProfileService;
 import com.socialapp.litback.service.AuthService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/profiles")
@@ -81,11 +86,61 @@ public class ProfileController {
       @PathVariable String id,
       @RequestParam(defaultValue = "true") boolean banned,
       @RequestHeader(value = "X-User-Id", required = false) String currentUserId) {
-        
+
     if (currentUserId != null && currentUserId.equals(id)) {
       return ResponseEntity.status(400).build();
     }
     profileService.vetProfile(id, banned);
     return ResponseEntity.noContent().build();
+  }
+
+  @PostMapping("/{id}/avatar")
+  public ResponseEntity<UserProfile> uploadAvatar(
+      @PathVariable String id,
+      @RequestParam("file") MultipartFile file,
+      @RequestHeader(value = "X-User-Id", required = false) String currentUserId) {
+
+    if (currentUserId != null && !currentUserId.equals(id) && !profileService.isAdmin(currentUserId)) {
+      return ResponseEntity.status(403).build();
+    }
+
+    try {
+      if (file.isEmpty()) {
+        return ResponseEntity.badRequest().build();
+      }
+
+      Path uploadDir = java.nio.file.Paths.get("uploads/avatars");
+      if (!Files.exists(uploadDir)) {
+        Files.createDirectories(uploadDir);
+      }
+
+      String filename = UUID.randomUUID().toString() + "-"
+          + (file.getOriginalFilename() != null ? file.getOriginalFilename().replaceAll("[^a-zA-Z0-9.-]", "")
+              : "avatar.png");
+      Path filePath = uploadDir.resolve(filename);
+      Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+
+      String avatarUrl = "/api/assets/avatars/" + filename;
+
+      return profileService.getProfile(id, currentUserId)
+          .map(p -> {
+            UserProfile updated = new UserProfile(
+                p.id(),
+                p.username().replace("@", ""),
+                p.subtitle(),
+                p.friend(),
+                p.banned(),
+                avatarUrl,
+                p.url(),
+                p.admin(),
+                true);
+            return ResponseEntity.ok(profileService.updateProfile(updated));
+          })
+          .orElseGet(() -> ResponseEntity.notFound().build());
+
+    } catch (java.io.IOException e) {
+      e.printStackTrace();
+      return ResponseEntity.status(500).build();
+    }
   }
 }

@@ -57,6 +57,15 @@ public class PostController {
         .orElseGet(() -> ResponseEntity.notFound().build());
   }
 
+  @GetMapping("/{id}/details")
+  public ResponseEntity<PostDetails> getPostDetails(
+      @PathVariable String id,
+      @RequestHeader(value = "X-User-Id", required = false) String userId) {
+    return postService.getPostDetails(id, userId)
+        .map(ResponseEntity::ok)
+        .orElseGet(() -> ResponseEntity.notFound().build());
+  }
+
   @GetMapping("/author/{id}")
   public ResponseEntity<List<Post>> getPostsByAuthor(
       @PathVariable String id,
@@ -121,6 +130,37 @@ public class PostController {
         post.saves(),
         post.banned(),
         post.liked())));
+  }
+
+  @PutMapping(value = "/{id}/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  public ResponseEntity<PostDetails> updatePostMultipart(
+      @PathVariable String id,
+      @RequestParam String title,
+      @RequestParam String description,
+      @RequestParam String caption,
+      @RequestHeader(value = "X-User-Id", required = false) String userId,
+      @RequestPart(required = false) List<MultipartFile> images) throws IOException {
+    String authorId = (userId == null || userId.isBlank()) ? Constants.DEFAULT_USER_ID : userId;
+    postService
+        .getPost(id, userId)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, Constants.ERR_POST_NOT_FOUND));
+    List<String> imageUrls = saveImages(images);
+    String mainImage = imageUrls.isEmpty() ? null : imageUrls.get(0);
+    Post post =
+        new Post(
+            id,
+            title,
+            description,
+            caption,
+            authorId,
+            mainImage,
+            0,
+            0,
+            0,
+            false,
+            false);
+    PostDetails updated = postService.updateWithImages(post, imageUrls);
+    return ResponseEntity.ok(updated);
   }
 
   @DeleteMapping("/{id}")

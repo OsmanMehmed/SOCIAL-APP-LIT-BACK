@@ -115,6 +115,38 @@ public class PostDao {
     return jdbcTemplate.query(sql, this::mapComment, altId);
   }
 
+  public Optional<PostDetails> findDetailsById(String id, String userId) {
+    Optional<Post> existing = findById(id, userId);
+    if (existing.isEmpty()) {
+      return Optional.empty();
+    }
+    Post post = existing.get();
+    String normalized = normalizePostId(post.id());
+    List<String> images = fetchImages(normalized);
+    if (images.isEmpty()) {
+      String image = resolveExistingImage(normalized, post.imageUrl());
+      if (image != null && !image.isBlank()) {
+        images = List.of(image);
+      }
+    }
+    return Optional.of(
+        new PostDetails(
+            normalized,
+            post.title(),
+            post.description(),
+            post.caption(),
+            post.authorId(),
+            post.imageUrl(),
+            post.likes(),
+            post.comments(),
+            post.saves(),
+            post.banned(),
+            post.liked(),
+            List.of(),
+            images,
+            Instant.now()));
+  }
+
   public PostDetails create(Post post) {
     return createWithImages(post, Collections.emptyList());
   }
@@ -162,49 +194,66 @@ public class PostDao {
         Instant.now());
   }
 
-  public PostDetails update(Post post) {
-    String imageUrl = resolveExistingImage(post.id(), post.imageUrl());
+  public Optional<PostDetails> update(Post post) {
+    return update(post, Collections.emptyList());
+  }
+
+  public Optional<PostDetails> updateWithImages(Post post, List<String> imageUrls) {
+    return update(post, imageUrls);
+  }
+
+  private Optional<PostDetails> update(Post post, List<String> imageUrls) {
+    String normalizedId = normalizePostId(post.id());
+    Optional<Post> existingOpt = findById(normalizedId, null);
+    if (existingOpt.isEmpty()) {
+      return Optional.empty();
+    }
+    Post existing = existingOpt.get();
+    String finalTitle = post.title() != null ? post.title() : existing.title();
+    String finalDescription =
+        post.description() != null ? post.description() : existing.description();
+    String finalCaption = post.caption() != null ? post.caption() : existing.caption();
+    String imageUrl =
+        (imageUrls != null && !imageUrls.isEmpty())
+            ? resolveImageUrl(imageUrls.get(0))
+            : resolveExistingImage(normalizedId, post.imageUrl() != null ? post.imageUrl() : existing.imageUrl());
     jdbcTemplate.update(
-        "UPDATE posts SET title = ?, description = ?, caption = ?, likes = ?, comments = ?, saves = ?, banned = ?, image_url = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
-        post.title(),
-        post.description(),
-        post.caption(),
-        post.likes(),
-        post.comments(),
-        post.saves(),
-        post.banned(),
+        "UPDATE posts SET title = ?, description = ?, caption = ?, image_url = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+        finalTitle,
+        finalDescription,
+        finalCaption,
         imageUrl,
-        post.id());
+        normalizedId);
     jdbcTemplate.update(
-        "UPDATE post_details SET title = ?, description = ?, caption = ?, likes = ?, comments = ?, saves = ?, banned = ?, image_url = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
-        post.title(),
-        post.description(),
-        post.caption(),
-        post.likes(),
-        post.comments(),
-        post.saves(),
-        post.banned(),
+        "UPDATE post_details SET title = ?, description = ?, caption = ?, image_url = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+        finalTitle,
+        finalDescription,
+        finalCaption,
         imageUrl,
-        post.id());
-    List<String> images = fetchImages(post.id());
-    if (images.isEmpty()) {
+        normalizedId);
+    if (imageUrls != null && !imageUrls.isEmpty()) {
+      insertImages(normalizedId, imageUrls);
+    }
+    List<String> images = imageUrls != null && !imageUrls.isEmpty() ? imageUrls : fetchImages(normalizedId);
+    if (images.isEmpty() && imageUrl != null && !imageUrl.isBlank()) {
       images = List.of(imageUrl);
     }
-    return new PostDetails(
-        post.id(),
-        post.title(),
-        post.description(),
-        post.caption(),
-        post.authorId(),
-        imageUrl,
-        post.likes(),
-        post.comments(),
-        post.saves(),
-        post.banned(),
-        post.liked(),
-        List.of(),
-        images,
-        Instant.now());
+    return Optional.of(
+        new PostDetails(
+            normalizedId,
+            finalTitle,
+            finalDescription,
+            finalCaption,
+            existing.authorId(),
+            imageUrl,
+            existing.likes(),
+            existing.comments(),
+            existing.saves(),
+            existing.banned(),
+            existing.liked(),
+            List.of(),
+            images,
+            Instant.now()));
   }
 
   public void delete(String id) {

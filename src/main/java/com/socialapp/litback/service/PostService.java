@@ -24,6 +24,10 @@ public class PostService {
     return postDao.findById(id, userId);
   }
 
+  public Optional<PostDetails> getPostDetails(String id, String userId) {
+    return postDao.findDetailsById(id, userId);
+  }
+
   public List<Post> listPosts(String userId) {
     return postDao.listAll(userId);
   }
@@ -49,7 +53,15 @@ public class PostService {
   }
 
   public PostDetails update(Post post) {
-    return postDao.update(post);
+    return postDao
+        .update(post)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, Constants.ERR_POST_NOT_FOUND));
+  }
+
+  public PostDetails updateWithImages(Post post, List<String> imageUrls) {
+    return postDao
+        .updateWithImages(post, imageUrls)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, Constants.ERR_POST_NOT_FOUND));
   }
 
   public void delete(String id) {

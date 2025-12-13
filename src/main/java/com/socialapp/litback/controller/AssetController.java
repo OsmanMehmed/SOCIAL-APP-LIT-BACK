@@ -22,13 +22,20 @@ public class AssetController {
       @PathVariable String file) throws IOException {
     String safeFolder = folder.replaceAll("[^a-zA-Z0-9_-]", "");
     String safeFile = file.replaceAll("[^a-zA-Z0-9_.-]", "");
-    Resource resource = new ClassPathResource("static/assets/" + safeFolder + "/" + safeFile);
+
+    // Check file system first
+    java.nio.file.Path uploadPath = java.nio.file.Paths.get("uploads").resolve(safeFolder).resolve(safeFile);
+    Resource resource = new org.springframework.core.io.FileSystemResource(uploadPath);
+
+    if (!resource.exists()) {
+      resource = new ClassPathResource("static/assets/" + safeFolder + "/" + safeFile);
+    }
+
     if (!resource.exists()) {
       return ResponseEntity.notFound().build();
     }
 
-    MediaType mediaType =
-        MediaTypeFactory.getMediaType(resource).orElse(MediaType.APPLICATION_OCTET_STREAM);
+    MediaType mediaType = MediaTypeFactory.getMediaType(resource).orElse(MediaType.APPLICATION_OCTET_STREAM);
     return ResponseEntity.ok()
         .header(HttpHeaders.CACHE_CONTROL, "max-age=86400, public")
         .contentType(mediaType)

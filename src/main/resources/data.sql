@@ -9,26 +9,26 @@ INSERT INTO users (id, username, password, subtitle, avatar_url, url, admin, fri
 
 -- Posts with illustrative photos
 INSERT INTO posts (id, author_id, title, description, caption, image_url, likes, comments, saves, banned) VALUES
-('post-1', 'user-1', 'Pasta fresca', 'Pasta fresca con salsa casera', 'Pasta fresca con salsaaaaa', '/api/assets/posts/post-1-pasta.jpg', 120, 18, 15, FALSE),
-('post-2', 'user-2', 'Receta de pan casero', 'Pan esponjoso recién horneado', 'Receta de pan casero', '/api/assets/posts/post-2-pan.jpg', 85, 12, 8, FALSE),
-('post-3', 'user-1', 'Desayuno saludable', 'Tazón con frutas y granola', 'Desayuno saludable', '/api/assets/posts/post-3-desayuno.jpg', 45, 5, 3, FALSE),
-('post-4', 'user-2', 'Curry suave', 'Curry suave con garbanzos y coco', 'Curry suave con garbanzos y leche de coco', '/api/assets/posts/post-4-curry.jpg', 32, 6, 4, FALSE),
-('post-5', 'user-2', 'Wraps crujientes', 'Pollo crujiente con sriracha miel', 'Wraps de pollo crujiente con sriracha miel', '/api/assets/posts/post-5-wraps.jpg', 51, 9, 7, FALSE),
-('post-6', 'user-2', 'Cheesecake sin horno', 'Cheesecake con frutos rojos', 'Cheesecake sin horno con frutos rojos', '/api/assets/posts/post-6-cheesecake.jpg', 76, 11, 10, FALSE),
-('post-7', 'user-4', 'Tacos veganos', 'Tacos veganos crujientes', 'Tacos veganos crujientes', '/api/assets/posts/post-7-tacos.jpg', 63, 4, 2, FALSE),
-('post-8', 'user-5', 'Donas rellenas', 'Donas rellenas con glaseado', 'Donas rellenas con glaseado', '/api/assets/posts/post-8-donas.jpg', 41, 7, 5, FALSE),
-('post-9', 'user-6', 'Cerveza artesanal', 'Receta secreta de cerveza', 'Receta secreta de cerveza artesanal', '/api/assets/posts/post-9-cerveza.jpg', 28, 1, 0, FALSE);
+('post-1', 'user-1', 'Pasta fresca', 'La auténtica pasta fresca italiana, hecha a mano con harina de sémola y huevos de corral. Servida con una salsa de tomate San Marzano cocinada a fuego lento.', 'Pasta fresca con salsaaaaa', '/api/assets/posts/post-1-pasta.jpg', 120, 18, 15, FALSE),
+('post-2', 'user-2', 'Receta de pan casero', 'Nada supera el olor a pan recién horneado. Esta receta de masa madre lleva 48 horas de fermentación para lograr esa corteza crujiente y miga aireada.', 'Receta de pan casero', '/api/assets/posts/post-2-pan.jpg', 85, 12, 8, FALSE),
+('post-3', 'user-1', 'Desayuno saludable', 'Empieza el día con energía: bowl de acai con granola casera, frutas del bosque frescas y un toque de miel orgánica.', 'Desayuno saludable', '/api/assets/posts/post-3-desayuno.jpg', 45, 5, 3, FALSE),
+('post-4', 'user-2', 'Curry suave', 'Un viaje a Tailandia en cada bocado. Curry amarillo con leche de coco, garbanzos tiernos y especias aromáticas.', 'Curry suave con garbanzos y leche de coco', '/api/assets/posts/post-4-curry.jpg', 32, 6, 4, FALSE),
+('post-5', 'user-2', 'Wraps crujientes', 'Almuerzo rápido pero gourmet: wraps de pollo rebozado en panko con una salsa especial de sriracha y miel.', 'Wraps de pollo crujiente con sriracha miel', '/api/assets/posts/post-5-wraps.jpg', 51, 9, 7, FALSE),
+('post-6', 'user-2', 'Cheesecake sin horno', 'El postre perfecto para el verano. Base de galleta, crema de queso suave y una cobertura generosa de frutos rojos frescos.', 'Cheesecake sin horno con frutos rojos', '/api/assets/posts/post-6-cheesecake.jpg', 76, 11, 10, FALSE),
+('post-7', 'user-4', 'Tacos veganos', 'Tacos al pastor veganos hechos con soja texturizada, piña asada y cilantro fresco. ¡No notarás la diferencia!', 'Tacos veganos crujientes', '/api/assets/posts/post-7-tacos.jpg', 63, 4, 2, FALSE),
+('post-8', 'user-5', 'Donas rellenas', 'Capricho de fin de semana: donas esponjosas rellenas de crema pastelera de vainilla y glaseado de chocolate.', 'Donas rellenas con glaseado', '/api/assets/posts/post-8-donas.jpg', 41, 7, 5, FALSE),
+('post-9', 'user-6', 'Cerveza artesanal', 'Desvelando el secreto de mi Stout casera. Notas de chocolate, café y un toque de vainilla. Fermentada durante 3 semanas.', 'Receta secreta de cerveza artesanal', '/api/assets/posts/post-9-cerveza.jpg', 28, 1, 0, FALSE);
 
 INSERT INTO post_details (id, title, description, caption, author_id, image_url, likes, comments, saves, banned) VALUES
-('post-1', 'Pasta fresca', 'Pasta fresca con salsa casera', 'Pasta fresca con salsaaaa', 'user-1', '/api/assets/posts/post-1-pasta.jpg', 120, 18, 15, FALSE),
-('post-2', 'Receta de pan casero', 'Pan esponjoso recién horneado', 'Receta de pan casero', 'user-2', '/api/assets/posts/post-2-pan.jpg', 85, 12, 8, FALSE),
-('post-3', 'Desayuno saludable', 'Tazón con frutas y granola', 'Desayuno saludable', 'user-1', '/api/assets/posts/post-3-desayuno.jpg', 45, 5, 3, FALSE),
-('post-4', 'Curry suave', 'Curry suave con garbanzos y coco', 'Curry suave con garbanzos y leche de coco', 'user-2', '/api/assets/posts/post-4-curry.jpg', 32, 6, 4, FALSE),
-('post-5', 'Wraps crujientes', 'Pollo crujiente con sriracha miel', 'Wraps de pollo crujiente con sriracha miel', 'user-2', '/api/assets/posts/post-5-wraps.jpg', 51, 9, 7, FALSE),
-('post-6', 'Cheesecake sin horno', 'Cheesecake con frutos rojos', 'Cheesecake sin horno con frutos rojos', 'user-2', '/api/assets/posts/post-6-cheesecake.jpg', 76, 11, 10, FALSE),
-('post-7', 'Tacos veganos', 'Tacos veganos crujientes', 'Tacos veganos crujientes', 'user-4', '/api/assets/posts/post-7-tacos.jpg', 63, 4, 2, FALSE),
-('post-8', 'Donas rellenas', 'Donas rellenas con glaseado', 'Donas rellenas con glaseado', 'user-5', '/api/assets/posts/post-8-donas.jpg', 41, 7, 5, FALSE),
-('post-9', 'Cerveza artesanal', 'Receta secreta de cerveza', 'Receta secreta de cerveza artesanal', 'user-6', '/api/assets/posts/post-9-cerveza.jpg', 28, 1, 0, FALSE);
+('post-1', 'Pasta fresca', 'La auténtica pasta fresca italiana, hecha a mano con harina de sémola y huevos de corral. Servida con una salsa de tomate San Marzano cocinada a fuego lento.', 'Pasta fresca con salsaaaa', 'user-1', '/api/assets/posts/post-1-pasta.jpg', 120, 18, 15, FALSE),
+('post-2', 'Receta de pan casero', 'Nada supera el olor a pan recién horneado. Esta receta de masa madre lleva 48 horas de fermentación para lograr esa corteza crujiente y miga aireada.', 'Receta de pan casero', 'user-2', '/api/assets/posts/post-2-pan.jpg', 85, 12, 8, FALSE),
+('post-3', 'Desayuno saludable', 'Empieza el día con energía: bowl de acai con granola casera, frutas del bosque frescas y un toque de miel orgánica.', 'Desayuno saludable', 'user-1', '/api/assets/posts/post-3-desayuno.jpg', 45, 5, 3, FALSE),
+('post-4', 'Curry suave', 'Un viaje a Tailandia en cada bocado. Curry amarillo con leche de coco, garbanzos tiernos y especias aromáticas.', 'Curry suave con garbanzos y leche de coco', 'user-2', '/api/assets/posts/post-4-curry.jpg', 32, 6, 4, FALSE),
+('post-5', 'Wraps crujientes', 'Almuerzo rápido pero gourmet: wraps de pollo rebozado en panko con una salsa especial de sriracha y miel.', 'Wraps de pollo crujiente con sriracha miel', 'user-2', '/api/assets/posts/post-5-wraps.jpg', 51, 9, 7, FALSE),
+('post-6', 'Cheesecake sin horno', 'El postre perfecto para el verano. Base de galleta, crema de queso suave y una cobertura generosa de frutos rojos frescos.', 'Cheesecake sin horno con frutos rojos', 'user-2', '/api/assets/posts/post-6-cheesecake.jpg', 76, 11, 10, FALSE),
+('post-7', 'Tacos veganos', 'Tacos al pastor veganos hechos con soja texturizada, piña asada y cilantro fresco. ¡No notarás la diferencia!', 'Tacos veganos crujientes', 'user-4', '/api/assets/posts/post-7-tacos.jpg', 63, 4, 2, FALSE),
+('post-8', 'Donas rellenas', 'Capricho de fin de semana: donas esponjosas rellenas de crema pastelera de vainilla y glaseado de chocolate.', 'Donas rellenas con glaseado', 'user-5', '/api/assets/posts/post-8-donas.jpg', 41, 7, 5, FALSE),
+('post-9', 'Cerveza artesanal', 'Desvelando el secreto de mi Stout casera. Notas de chocolate, café y un toque de vainilla. Fermentada durante 3 semanas.', 'Receta secreta de cerveza artesanal', 'user-6', '/api/assets/posts/post-9-cerveza.jpg', 28, 1, 0, FALSE);
 
 INSERT INTO post_images (id, post_id, url, position) VALUES
 ('img-1', 'post-1', '/api/assets/posts/post-1-pasta.jpg', 0),
@@ -87,3 +87,14 @@ INSERT INTO friend_requests (id, from_user_id, to_user_id, status) VALUES
 ('freq-2', 'user-3', 'user-2', 'ACCEPTED'),
 ('freq-3', 'user-4', 'user-2', 'PENDING'),
 ('freq-4', 'user-6', 'user-5', 'PENDING');
+
+INSERT INTO post_tags (post_id, tag) VALUES
+('post-1', 'pasta'), ('post-1', 'italiana'), ('post-1', 'casero'),
+('post-2', 'pan'), ('post-2', 'baking'), ('post-2', 'sourdough'),
+('post-3', 'saludable'), ('post-3', 'desayuno'), ('post-3', 'frutas'),
+('post-4', 'curry'), ('post-4', 'thai'), ('post-4', 'spicy'),
+('post-5', 'pollo'), ('post-5', 'crispy'), ('post-5', 'sriracha'),
+('post-6', 'postre'), ('post-6', 'cheesecake'), ('post-6', 'verano'),
+('post-7', 'vegano'), ('post-7', 'tacos'), ('post-7', 'mexicano'),
+('post-8', 'donas'), ('post-8', 'chocolate'), ('post-8', 'dulce'),
+('post-9', 'cerveza'), ('post-9', 'craftbeer'), ('post-9', 'homebrewing');

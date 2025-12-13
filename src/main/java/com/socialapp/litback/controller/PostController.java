@@ -141,14 +141,27 @@ public class PostController {
       @RequestParam String description,
       @RequestParam String caption,
       @RequestParam(required = false) List<String> tags,
+      @RequestParam(required = false) List<String> existingImages,
       @RequestHeader(value = "X-User-Id", required = false) String userId,
       @RequestPart(required = false) List<MultipartFile> images) throws IOException {
     String authorId = (userId == null || userId.isBlank()) ? Constants.DEFAULT_USER_ID : userId;
     postService
         .getPost(id, userId)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, Constants.ERR_POST_NOT_FOUND));
-    List<String> imageUrls = saveImages(images);
-    String mainImage = imageUrls.isEmpty() ? null : imageUrls.get(0);
+    List<String> newImageUrls = saveImages(images);
+    List<String> combinedImages = new ArrayList<>();
+    if (existingImages != null) {
+      combinedImages.addAll(existingImages);
+    }
+    combinedImages.addAll(newImageUrls);
+
+    // If both existingImages and images are null/empty, we might want to
+    // distinguish behavior?
+    // But logically, if existingImages is passed (even empty), we use it.
+    // If existingImages is null, and we have new images, we used to replace all.
+    // combinedImages handles this (starts empty + new).
+
+    String mainImage = combinedImages.isEmpty() ? null : combinedImages.get(0);
     Post post = new Post(
         id,
         title,
@@ -162,7 +175,35 @@ public class PostController {
         false,
         false,
         tags != null ? tags : java.util.Collections.emptyList());
-    PostDetails updated = postService.updateWithImages(post, imageUrls);
+
+    // If combinedImages is empty, we must pass it to ensure images are cleared if
+    // intended.
+    // However, if existingImages was NULL and newImages was NULL/empty,
+    // combinedImages is empty.
+    // In that case do we interpret as "clear all" or "keep all"?
+    // If I map "null existingImages" -> "empty list", then it clears all.
+    // Previously, saveImages returned empty list. updateWithImages called
+    // update(post, []).
+    // Old DAO: if empty, it kept existing.
+    // New DAO: if empty, it clears existing.
+
+    // BAD! If I send a request without existingImages (e.g. legacy client), and no
+    // file, it will CLEAR IMAGES.
+    // I MUST handle this.
+    // If (existingImages == null && (images == null || images.isEmpty()))
+    // Then we should probably pass NULL to updateWithImages ?
+    // But updateWithImages takes List<String>.
+
+    List<String> finalImages = null;
+    if (existingImages != null || (images != null && !images.isEmpty())) {
+      finalImages = combinedImages;
+    }
+
+    // If finalImages is null, DAO update skips image update.
+    // If finalImages is empty (explicitly passed empty existingImages), DAO clears
+    // images.
+
+    PostDetails updated = postService.updateWithImages(post, finalImages);
     return ResponseEntity.ok(updated);
   }
 

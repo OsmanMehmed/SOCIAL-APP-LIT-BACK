@@ -26,8 +26,9 @@ public class PostDao {
 
   private Post mapPost(java.sql.ResultSet rs, int rowNum) throws java.sql.SQLException {
     boolean liked = hasColumn(rs, "liked") && rs.getBoolean("liked");
+    String id = rs.getString("id");
     return new Post(
-        rs.getString("id"),
+        id,
         rs.getString("title"),
         rs.getString("description"),
         rs.getString("caption"),
@@ -38,7 +39,7 @@ public class PostDao {
         rs.getInt("saves"),
         rs.getBoolean("banned"),
         liked,
-        Collections.emptyList());
+        fetchTags(id));
   }
 
   private Comment mapComment(java.sql.ResultSet rs, int rowNum) throws java.sql.SQLException {
@@ -198,7 +199,7 @@ public class PostDao {
   }
 
   public Optional<PostDetails> update(Post post) {
-    return update(post, Collections.emptyList());
+    return update(post, null);
   }
 
   public Optional<PostDetails> updateWithImages(Post post, List<String> imageUrls) {
@@ -215,9 +216,12 @@ public class PostDao {
     String finalTitle = post.title() != null ? post.title() : existing.title();
     String finalDescription = post.description() != null ? post.description() : existing.description();
     String finalCaption = post.caption() != null ? post.caption() : existing.caption();
-    String imageUrl = (imageUrls != null && !imageUrls.isEmpty())
-        ? resolveImageUrl(imageUrls.get(0))
-        : resolveExistingImage(normalizedId, post.imageUrl() != null ? post.imageUrl() : existing.imageUrl());
+    String imageUrl;
+    if (imageUrls != null) {
+      imageUrl = resolveImageUrl(!imageUrls.isEmpty() ? imageUrls.get(0) : null);
+    } else {
+      imageUrl = resolveExistingImage(normalizedId, post.imageUrl() != null ? post.imageUrl() : existing.imageUrl());
+    }
     jdbcTemplate.update(
         "UPDATE posts SET title = ?, description = ?, caption = ?, image_url = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
         finalTitle,
@@ -232,7 +236,7 @@ public class PostDao {
         finalCaption,
         imageUrl,
         normalizedId);
-    if (imageUrls != null && !imageUrls.isEmpty()) {
+    if (imageUrls != null) {
       insertImages(normalizedId, imageUrls);
     }
     if (post.tags() != null) {

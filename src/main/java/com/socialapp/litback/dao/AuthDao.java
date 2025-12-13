@@ -4,6 +4,7 @@ import com.socialapp.litback.model.AuthRequest;
 import com.socialapp.litback.model.AuthResponse;
 import com.socialapp.litback.model.UserProfile;
 import com.socialapp.litback.shared.Constants;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -59,9 +60,13 @@ public class AuthDao {
 
   public AuthResponse register(AuthRequest request) {
     String userId = UUID.randomUUID().toString();
-    jdbcTemplate.update(
-        "INSERT INTO users (id, username, password, subtitle, url, admin) VALUES (?, ?, ?, ?, ?, ?)",
-        userId, request.username(), request.password(), Constants.DEFAULT_USER_SUBTITLE, null, false);
+    try {
+      jdbcTemplate.update(
+          "INSERT INTO users (id, username, password, subtitle, url, admin) VALUES (?, ?, ?, ?, ?, ?)",
+          userId, request.username(), request.password(), Constants.DEFAULT_USER_SUBTITLE, null, false);
+    } catch (DuplicateKeyException e) {
+      throw new ResponseStatusException(HttpStatus.CONFLICT, Constants.ERR_USER_ALREADY_EXISTS);
+    }
     UserProfile profile = new UserProfile(userId, "@" + request.username(), Constants.DEFAULT_USER_SUBTITLE, false,
         false, null, null, false, true);
     String token = UUID.randomUUID().toString();

@@ -296,6 +296,8 @@ public class PostDao {
     jdbcTemplate.update(
         "INSERT INTO comments (id, post_id, author_id, text, created_at) VALUES (?, ?, ?, ?, ?)",
         id, normalizedPostId, authorId, comment.text(), created);
+    jdbcTemplate.update("UPDATE posts SET comments = comments + 1 WHERE id = ?", normalizedPostId);
+    jdbcTemplate.update("UPDATE post_details SET comments = comments + 1 WHERE id = ?", normalizedPostId);
     return new Comment(id, normalizedPostId, authorId, comment.text(), created.toInstant());
   }
 

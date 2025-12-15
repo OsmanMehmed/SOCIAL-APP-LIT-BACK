@@ -155,12 +155,6 @@ public class PostController {
     }
     combinedImages.addAll(newImageUrls);
 
-    // If both existingImages and images are null/empty, we might want to
-    // distinguish behavior?
-    // But logically, if existingImages is passed (even empty), we use it.
-    // If existingImages is null, and we have new images, we used to replace all.
-    // combinedImages handles this (starts empty + new).
-
     String mainImage = combinedImages.isEmpty() ? null : combinedImages.get(0);
     Post post = new Post(
         id,
@@ -176,32 +170,9 @@ public class PostController {
         false,
         tags != null ? tags : java.util.Collections.emptyList());
 
-    // If combinedImages is empty, we must pass it to ensure images are cleared if
-    // intended.
-    // However, if existingImages was NULL and newImages was NULL/empty,
-    // combinedImages is empty.
-    // In that case do we interpret as "clear all" or "keep all"?
-    // If I map "null existingImages" -> "empty list", then it clears all.
-    // Previously, saveImages returned empty list. updateWithImages called
-    // update(post, []).
-    // Old DAO: if empty, it kept existing.
-    // New DAO: if empty, it clears existing.
-
-    // BAD! If I send a request without existingImages (e.g. legacy client), and no
-    // file, it will CLEAR IMAGES.
-    // I MUST handle this.
-    // If (existingImages == null && (images == null || images.isEmpty()))
-    // Then we should probably pass NULL to updateWithImages ?
-    // But updateWithImages takes List<String>.
-
-    List<String> finalImages = null;
-    if (existingImages != null || (images != null && !images.isEmpty())) {
-      finalImages = combinedImages;
-    }
-
-    // If finalImages is null, DAO update skips image update.
-    // If finalImages is empty (explicitly passed empty existingImages), DAO clears
-    // images.
+    System.out.println("DEBUG: updatePostMultipart. id=" + id + " existingImages=" + existingImages + " images="
+        + (images != null ? images.size() : "null"));
+    List<String> finalImages = combinedImages;
 
     PostDetails updated = postService.updateWithImages(post, finalImages);
     return ResponseEntity.ok(updated);

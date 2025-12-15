@@ -240,7 +240,7 @@ public class PostDao {
       insertImages(normalizedId, imageUrls);
     }
     if (post.tags() != null) {
-      // Tags update strategy: replace all
+
       insertTags(normalizedId, post.tags());
     }
 
@@ -249,8 +249,6 @@ public class PostDao {
       images = List.of(imageUrl);
     }
 
-    // Fetch fresh tags if not provided in update (partial updates are rare here but
-    // safer)
     List<String> tags = (post.tags() != null) ? post.tags() : fetchTags(normalizedId);
 
     return Optional.of(
@@ -312,7 +310,7 @@ public class PostDao {
     if (rawUrl != null && !rawUrl.isBlank()) {
       return rawUrl;
     }
-    return Constants.DEFAULT_POST_IMAGE_URL;
+    return null;
   }
 
   private String resolveExistingImage(String postId, String rawUrl) {
@@ -331,7 +329,7 @@ public class PostDao {
       } catch (Exception ignored) {
       }
     }
-    return Constants.DEFAULT_POST_IMAGE_URL;
+    return null;
   }
 
   private void insertImages(String postId, List<String> urls) {

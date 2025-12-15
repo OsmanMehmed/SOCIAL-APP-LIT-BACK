@@ -45,8 +45,8 @@ public class FriendDao {
   }
 
   public List<UserProfile> search(String query, boolean includeBanned) {
-    String sql = "SELECT id, username, subtitle, friend, banned, avatar_url, url, admin FROM users WHERE username LIKE ? AND (banned = FALSE OR ? = TRUE)";
-    return jdbcTemplate.query(sql, this::mapProfile, "%" + query + "%", includeBanned);
+    String sql = "SELECT id, username, subtitle, friend, banned, avatar_url, url, admin FROM users WHERE LOWER(username) LIKE ? AND (banned = FALSE OR ? = TRUE)";
+    return jdbcTemplate.query(sql, this::mapProfile, "%" + query.toLowerCase() + "%", includeBanned);
   }
 
   public FriendRequest sendRequest(String from, String to) {

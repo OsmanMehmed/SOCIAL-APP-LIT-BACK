@@ -93,22 +93,21 @@ public class ProfileDao {
       return false;
     final String username = id.replace("@", "");
     try {
-      Integer flag = jdbcTemplate.queryForObject(
+      Boolean flag = jdbcTemplate.queryForObject(
           "SELECT admin FROM users WHERE id = ?",
-          Integer.class,
+          Boolean.class,
           id);
-      if (flag != null && flag == 1)
-        return true;
+      return Boolean.TRUE.equals(flag);
     } catch (EmptyResultDataAccessException e) {
       // Continue to check by username
     }
 
     try {
-      Integer flag = jdbcTemplate.queryForObject(
+      Boolean flag = jdbcTemplate.queryForObject(
           "SELECT admin FROM users WHERE username = ?",
-          Integer.class,
+          Boolean.class,
           username);
-      return flag != null && flag == 1;
+      return Boolean.TRUE.equals(flag);
     } catch (EmptyResultDataAccessException e) {
       return false;
     }

@@ -16,4 +16,5 @@ public final class Constants {
   public static final String POST_PREFIX = "post-";
   public static final String DEFAULT_POST_IMAGE_URL = "/api/assets/posts/post-default.jpg";
   public static final String DEFAULT_RANDOM_LIMIT = "3";
+  public static final String USER_HANDLE_PREFIX = "@";
 }

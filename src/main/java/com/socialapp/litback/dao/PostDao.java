@@ -318,7 +318,7 @@ public class PostDao {
     if (rawAuthorId == null || rawAuthorId.isBlank()) {
       return Constants.DEFAULT_USER_ID;
     }
-    String candidate = rawAuthorId.replace("@", "");
+    String candidate = rawAuthorId.replace(Constants.USER_HANDLE_PREFIX, "");
     try {
       Integer count = jdbcTemplate.queryForObject(
           "SELECT COUNT(*) FROM users WHERE id = ? OR username = ?",
@@ -492,16 +492,17 @@ public class PostDao {
 
   public List<Post> search(String query, String userId, boolean includeBanned) {
     String q = "%" + query.toLowerCase() + "%";
-    String sql = "SELECT p.id, p.caption, p.author_id, p.image_url, p.likes, p.comments, p.saves, p.banned, "
+    String sql = "SELECT p.id, p.title, p.description, p.author_id, p.image_url, p.likes, p.comments, p.saves, p.banned, "
         + "CASE WHEN pl.user_id IS NULL THEN FALSE ELSE TRUE END AS liked "
         + "FROM posts p "
         + "JOIN users u ON u.id = p.author_id "
+        + "JOIN post_details pd ON pd.id = p.id "
         + "LEFT JOIN post_likes pl ON pl.post_id = p.id AND pl.user_id = ? "
-        + "WHERE (LOWER(pd.caption) LIKE ? OR LOWER(p.author_id) LIKE ?) "
+        + "WHERE (LOWER(pd.caption) LIKE ? OR LOWER(p.title) LIKE ? OR LOWER(p.description) LIKE ?) "
         + "AND (p.banned = false OR ? = true) "
         + "AND (u.banned = false OR ? = true) "
         + "ORDER BY p.updated_at DESC";
-    return jdbcTemplate.query(sql, this::mapPost, userId, q, q, includeBanned, includeBanned);
+    return jdbcTemplate.query(sql, this::mapPost, userId, q, q, q, includeBanned, includeBanned);
   }
 
   public List<Post> randomPosts(int limit, String userId, boolean includeBanned) {

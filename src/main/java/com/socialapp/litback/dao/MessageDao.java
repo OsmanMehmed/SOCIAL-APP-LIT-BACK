@@ -71,9 +71,16 @@ public class MessageDao {
     return new Conversation(id, a, b, now.toInstant());
   }
 
-  public List<Conversation> listConversations(String userId) {
-    String sql = "SELECT id, participant_a, participant_b, updated_at FROM conversations WHERE participant_a = ? OR participant_b = ? ORDER BY updated_at DESC";
-    return jdbcTemplate.query(sql, this::mapConversation, userId, userId);
+  public List<Conversation> listConversations(String userId, boolean includeBanned) {
+    String sql = "SELECT c.id, c.participant_a, c.participant_b, c.updated_at " +
+        "FROM conversations c " +
+        "JOIN users ua ON c.participant_a = ua.id " +
+        "JOIN users ub ON c.participant_b = ub.id " +
+        "WHERE (c.participant_a = ? OR c.participant_b = ?) " +
+        "AND (ua.banned = FALSE OR ? = TRUE) " +
+        "AND (ub.banned = FALSE OR ? = TRUE) " +
+        "ORDER BY c.updated_at DESC";
+    return jdbcTemplate.query(sql, this::mapConversation, userId, userId, includeBanned, includeBanned);
   }
 
   private Conversation findConversation(String a, String b) {

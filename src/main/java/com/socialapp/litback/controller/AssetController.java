@@ -36,7 +36,7 @@ public class AssetController {
 
     MediaType mediaType = MediaTypeFactory.getMediaType(resource).orElse(MediaType.APPLICATION_OCTET_STREAM);
     return ResponseEntity.ok()
-        .header(HttpHeaders.CACHE_CONTROL, "max-age=86400, public")
+        .header(HttpHeaders.CACHE_CONTROL, "no-cache, no-store, must-revalidate")
         .contentType(mediaType)
         .body(resource);
   }

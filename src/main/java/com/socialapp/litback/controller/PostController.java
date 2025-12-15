@@ -222,7 +222,8 @@ public class PostController {
       return List.of();
     }
     List<String> urls = new ArrayList<>();
-    Path uploadDir = Paths.get("src/main/resources/static/assets/uploads");
+    // Use runtime uploads directory instead of source directory
+    Path uploadDir = Paths.get("uploads/posts");
     Files.createDirectories(uploadDir);
     for (MultipartFile file : files) {
       if (file.isEmpty())
@@ -233,7 +234,7 @@ public class PostController {
       String filename = java.util.UUID.randomUUID() + "-" + sanitizedName;
       Path target = uploadDir.resolve(filename);
       Files.copy(file.getInputStream(), target);
-      urls.add("/api/assets/uploads/" + filename);
+      urls.add("/api/assets/posts/" + filename);
     }
     return urls;
   }

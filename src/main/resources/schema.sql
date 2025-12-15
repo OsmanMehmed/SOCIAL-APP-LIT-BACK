@@ -18,7 +18,6 @@ CREATE TABLE posts (
     author_id VARCHAR(36) NOT NULL,
     title VARCHAR(255) NOT NULL,
     description CLOB,
-    caption CLOB NOT NULL,
     image_url VARCHAR(500),
     likes INT DEFAULT 0,
     comments INT DEFAULT 0,

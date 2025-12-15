@@ -39,7 +39,8 @@ public class PostService {
   }
 
   public List<Post> listPostsByAuthor(String authorId, String userId) {
-    return postDao.listByAuthor(authorId, userId, isAdmin(userId));
+    boolean includeBanned = isAdmin(userId) || (userId != null && userId.equals(authorId));
+    return postDao.listByAuthor(authorId, userId, includeBanned);
   }
 
   public List<Post> search(String query, String userId) {
@@ -51,22 +52,22 @@ public class PostService {
   }
 
   public PostDetails create(Post post) {
-    return postDao.create(post);
+    return postDao.create(post, null);
   }
 
-  public PostDetails createWithImages(Post post, List<String> imageUrls) {
-    return postDao.createWithImages(post, imageUrls);
+  public PostDetails createWithImages(Post post, List<String> imageUrls, String caption) {
+    return postDao.createWithImages(post, imageUrls, caption);
   }
 
-  public PostDetails update(Post post) {
+  public PostDetails update(Post post, String caption) {
     return postDao
-        .update(post)
+        .update(post, caption)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, Constants.ERR_POST_NOT_FOUND));
   }
 
-  public PostDetails updateWithImages(Post post, List<String> imageUrls) {
+  public PostDetails updateWithImages(Post post, List<String> imageUrls, String caption) {
     return postDao
-        .updateWithImages(post, imageUrls)
+        .updateWithImages(post, imageUrls, caption)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, Constants.ERR_POST_NOT_FOUND));
   }
 

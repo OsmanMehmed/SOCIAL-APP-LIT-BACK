@@ -14,6 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.UUID;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -104,7 +105,6 @@ public class PostController {
         null,
         title,
         description,
-        caption,
         authorId,
         mainImage,
         0,
@@ -113,7 +113,7 @@ public class PostController {
         false,
         false,
         tags != null ? tags : java.util.Collections.emptyList());
-    PostDetails created = postService.createWithImages(post, imageUrls);
+    PostDetails created = postService.createWithImages(post, imageUrls, caption);
     return ResponseEntity.ok(created);
   }
 
@@ -123,7 +123,6 @@ public class PostController {
         id,
         post.title(),
         post.description(),
-        post.caption(),
         post.authorId(),
         post.imageUrl(),
         post.likes(),
@@ -131,7 +130,7 @@ public class PostController {
         post.saves(),
         post.banned(),
         post.liked(),
-        post.tags())));
+        post.tags()), null));
   }
 
   @PutMapping(value = "/{id}/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -160,7 +159,6 @@ public class PostController {
         id,
         title,
         description,
-        caption,
         authorId,
         mainImage,
         0,
@@ -174,7 +172,7 @@ public class PostController {
         + (images != null ? images.size() : "null"));
     List<String> finalImages = combinedImages;
 
-    PostDetails updated = postService.updateWithImages(post, finalImages);
+    PostDetails updated = postService.updateWithImages(post, finalImages, caption);
     return ResponseEntity.ok(updated);
   }
 
@@ -222,16 +220,16 @@ public class PostController {
       return List.of();
     }
     List<String> urls = new ArrayList<>();
-    // Use runtime uploads directory instead of source directory
     Path uploadDir = Paths.get("uploads/posts");
     Files.createDirectories(uploadDir);
     for (MultipartFile file : files) {
       if (file.isEmpty())
         continue;
-      String sanitizedName = file.getOriginalFilename() != null
-          ? file.getOriginalFilename().replaceAll("[^a-zA-Z0-9._-]", "_")
+      String originalFilename = file.getOriginalFilename();
+      String sanitizedName = originalFilename != null
+          ? originalFilename.replaceAll("[^a-zA-Z0-9._-]", "_")
           : "image";
-      String filename = java.util.UUID.randomUUID() + "-" + sanitizedName;
+      String filename = UUID.randomUUID() + "-" + sanitizedName;
       Path target = uploadDir.resolve(filename);
       Files.copy(file.getInputStream(), target);
       urls.add("/api/assets/posts/" + filename);

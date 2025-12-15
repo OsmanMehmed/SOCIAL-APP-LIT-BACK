@@ -30,15 +30,13 @@ public class ProfileDao {
   }
 
   public Optional<UserProfile> findById(String id) {
-    final String sqlById =
-        "SELECT id, username, subtitle, friend, banned, avatar_url, url, admin FROM users WHERE id = ?";
+    final String sqlById = "SELECT id, username, subtitle, friend, banned, avatar_url, url, admin FROM users WHERE id = ?";
     try {
       return Optional.ofNullable(jdbcTemplate.queryForObject(sqlById, this::mapProfile, id));
     } catch (EmptyResultDataAccessException ex) {
-      
+
       final String username = id.replace("@", "");
-      final String sqlByUsername =
-          "SELECT id, username, subtitle, friend, banned, avatar_url, url, admin FROM users WHERE username = ?";
+      final String sqlByUsername = "SELECT id, username, subtitle, friend, banned, avatar_url, url, admin FROM users WHERE username = ?";
       try {
         return Optional.ofNullable(
             jdbcTemplate.queryForObject(sqlByUsername, this::mapProfile, username));
@@ -61,7 +59,8 @@ public class ProfileDao {
         profile.url(),
         profile.admin(),
         "password123");
-    return new UserProfile(id, profile.username(), profile.subtitle(), profile.friend(), profile.banned(), profile.avatarUrl(), profile.url(), profile.admin(), false);
+    return new UserProfile(id, profile.username(), profile.subtitle(), profile.friend(), profile.banned(),
+        profile.avatarUrl(), profile.url(), profile.admin(), false);
   }
 
   public UserProfile update(UserProfile profile) {
@@ -90,19 +89,28 @@ public class ProfileDao {
   }
 
   public boolean isAdmin(String id) {
-    if (id == null || id.isBlank()) return false;
+    if (id == null || id.isBlank())
+      return false;
     final String username = id.replace("@", "");
-    Integer flag = jdbcTemplate.queryForObject(
-        "SELECT admin FROM users WHERE id = ?",
-        Integer.class,
-        id);
-    if (flag != null) {
-      return flag == 1;
+    try {
+      Integer flag = jdbcTemplate.queryForObject(
+          "SELECT admin FROM users WHERE id = ?",
+          Integer.class,
+          id);
+      if (flag != null && flag == 1)
+        return true;
+    } catch (EmptyResultDataAccessException e) {
+      // Continue to check by username
     }
-    flag = jdbcTemplate.queryForObject(
-        "SELECT admin FROM users WHERE username = ?",
-        Integer.class,
-        username);
-    return flag != null && flag == 1;
+
+    try {
+      Integer flag = jdbcTemplate.queryForObject(
+          "SELECT admin FROM users WHERE username = ?",
+          Integer.class,
+          username);
+      return flag != null && flag == 1;
+    } catch (EmptyResultDataAccessException e) {
+      return false;
+    }
   }
 }

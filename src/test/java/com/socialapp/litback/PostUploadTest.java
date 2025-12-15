@@ -18,8 +18,9 @@ class PostUploadTest {
 
   @Test
   void createWithImagesSucceeds() {
-    Post post = new Post(null, "t", "d", "c", "user-1", null, 0, 0, 0, false, false, java.util.Collections.emptyList());
-    PostDetails created = postService.createWithImages(post, List.of());
+    Post post = new Post(null, "Test Title", "Test Desc", "user-1", null, 0, 0, 0, false, false,
+        java.util.Collections.emptyList());
+    PostDetails created = postService.createWithImages(post, List.of(), "Test Caption");
     assertNotNull(created.id());
   }
 }

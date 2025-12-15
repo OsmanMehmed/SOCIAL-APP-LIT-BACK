@@ -6,9 +6,11 @@ import com.socialapp.litback.service.AuthService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.Paths;
 import java.util.UUID;
 
 @RestController
@@ -109,13 +111,14 @@ public class ProfileController {
         return ResponseEntity.badRequest().build();
       }
 
-      Path uploadDir = java.nio.file.Paths.get("uploads/avatars");
+      Path uploadDir = Paths.get("uploads/avatars");
       if (!Files.exists(uploadDir)) {
         Files.createDirectories(uploadDir);
       }
 
+      String originalFilename = file.getOriginalFilename();
       String filename = UUID.randomUUID().toString() + "-"
-          + (file.getOriginalFilename() != null ? file.getOriginalFilename().replaceAll("[^a-zA-Z0-9.-]", "")
+          + (originalFilename != null ? originalFilename.replaceAll("[^a-zA-Z0-9.-]", "")
               : "avatar.png");
       Path filePath = uploadDir.resolve(filename);
       Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
@@ -138,7 +141,7 @@ public class ProfileController {
           })
           .orElseGet(() -> ResponseEntity.notFound().build());
 
-    } catch (java.io.IOException e) {
+    } catch (IOException e) {
       e.printStackTrace();
       return ResponseEntity.status(500).build();
     }

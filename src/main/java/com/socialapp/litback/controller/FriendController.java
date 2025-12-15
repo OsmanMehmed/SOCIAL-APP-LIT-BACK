@@ -20,14 +20,17 @@ public class FriendController {
   }
 
   @GetMapping("/search")
-  public ResponseEntity<List<UserProfile>> search(@RequestParam String q) {
-    return ResponseEntity.ok(friendService.search(q));
+  public ResponseEntity<List<UserProfile>> search(
+      @RequestParam String q,
+      @RequestHeader(value = "X-User-Id", required = false) String currentUserId) {
+    return ResponseEntity.ok(friendService.search(q, currentUserId));
   }
 
   @GetMapping("/random")
   public ResponseEntity<List<UserProfile>> random(
-      @RequestParam(defaultValue = Constants.DEFAULT_RANDOM_LIMIT) int limit) {
-    return ResponseEntity.ok(friendService.randomProfiles(limit));
+      @RequestParam(defaultValue = Constants.DEFAULT_RANDOM_LIMIT) int limit,
+      @RequestHeader(value = "X-User-Id", required = false) String currentUserId) {
+    return ResponseEntity.ok(friendService.randomProfiles(limit, currentUserId));
   }
 
   @GetMapping("/status")
@@ -72,7 +75,7 @@ public class FriendController {
       @RequestParam String from,
       @RequestParam String to,
       @RequestHeader(value = "X-User-Id", required = false) String currentUserId) {
-        
+
     if (from.equals(to)) {
       return ResponseEntity.status(400).build();
     }
@@ -97,7 +100,9 @@ public class FriendController {
   }
 
   @GetMapping
-  public ResponseEntity<List<UserProfile>> friends(@RequestParam String userId) {
-    return ResponseEntity.ok(friendService.listFriends(userId));
+  public ResponseEntity<List<UserProfile>> friends(
+      @RequestParam String userId,
+      @RequestHeader(value = "X-User-Id", required = false) String currentUserId) {
+    return ResponseEntity.ok(friendService.listFriends(userId, currentUserId));
   }
 }

@@ -44,9 +44,9 @@ public class FriendDao {
     return new Friendship(rs.getString("id"), rs.getString("user_id"), rs.getString("friend_id"));
   }
 
-  public List<UserProfile> search(String query) {
-    String sql = "SELECT id, username, subtitle, friend, banned, avatar_url, url, admin FROM users WHERE username LIKE ?";
-    return jdbcTemplate.query(sql, this::mapProfile, "%" + query + "%");
+  public List<UserProfile> search(String query, boolean includeBanned) {
+    String sql = "SELECT id, username, subtitle, friend, banned, avatar_url, url, admin FROM users WHERE username LIKE ? AND (banned = FALSE OR ? = TRUE)";
+    return jdbcTemplate.query(sql, this::mapProfile, "%" + query + "%", includeBanned);
   }
 
   public FriendRequest sendRequest(String from, String to) {
@@ -75,19 +75,20 @@ public class FriendDao {
     return jdbcTemplate.query(sql, this::mapRequest, userId);
   }
 
-  public List<UserProfile> listFriends(String userId) {    
+  public List<UserProfile> listFriends(String userId, boolean includeBanned) {
     String sql = new StringBuilder()
         .append("SELECT u.id, u.username, u.subtitle, TRUE AS friend, u.banned, u.avatar_url, u.url, u.admin ")
         .append("FROM friends f ")
         .append("JOIN users u ON (u.id = f.friend_id) ")
-        .append("WHERE f.user_id = ?")
+        .append("WHERE f.user_id = ? ")
+        .append("AND (u.banned = FALSE OR ? = TRUE)")
         .toString();
 
     if (sql == null) {
       throw new IllegalArgumentException("sql is null");
     }
-    
-    return jdbcTemplate.query(sql, this::mapProfile, userId);
+
+    return jdbcTemplate.query(sql, this::mapProfile, userId, includeBanned);
   }
 
   private Friendship findFriendship(String userId, String friendId) {
@@ -129,10 +130,10 @@ public class FriendDao {
     return count != null && count > 0;
   }
 
-  public List<UserProfile> randomProfiles(int limit) {
+  public List<UserProfile> randomProfiles(int limit, boolean includeBanned) {
     int safeLimit = Math.max(1, Math.min(limit, 20));
-    String sql = "SELECT id, username, subtitle, friend, banned, avatar_url, url, admin FROM users";
-    List<UserProfile> entries = jdbcTemplate.query(sql, this::mapProfile);
+    String sql = "SELECT id, username, subtitle, friend, banned, avatar_url, url, admin FROM users WHERE (banned = FALSE OR ? = TRUE)";
+    List<UserProfile> entries = jdbcTemplate.query(sql, this::mapProfile, includeBanned);
     if (entries.isEmpty()) {
       return entries;
     }

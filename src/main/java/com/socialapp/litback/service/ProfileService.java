@@ -31,10 +31,13 @@ public class ProfileService {
       return Optional.empty();
     }
     final String finalLookup = lookupId;
-    return profileDao.findById(finalLookup).map(profile -> {
+    return profileDao.findById(finalLookup).flatMap(profile -> {
       boolean isOwnProfile = currentUserId != null && currentUserId.equals(profile.id());
+      if (profile.banned() && !isAdmin(currentUserId) && !isOwnProfile) {
+        return Optional.empty();
+      }
       boolean isFriend = !isOwnProfile && friendService.isFriend(currentUserId, profile.id());
-      return new UserProfile(
+      return Optional.of(new UserProfile(
           profile.id(),
           profile.username(),
           profile.subtitle(),
@@ -43,7 +46,7 @@ public class ProfileService {
           profile.avatarUrl(),
           profile.url(),
           profile.admin(),
-          isOwnProfile);
+          isOwnProfile));
     });
   }
 

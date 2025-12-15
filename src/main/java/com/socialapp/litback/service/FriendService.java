@@ -11,13 +11,19 @@ import java.util.List;
 @Service
 public class FriendService {
   private final FriendDao friendDao;
+  private final com.socialapp.litback.dao.ProfileDao profileDao;
 
-  public FriendService(FriendDao friendDao) {
+  public FriendService(FriendDao friendDao, com.socialapp.litback.dao.ProfileDao profileDao) {
     this.friendDao = friendDao;
+    this.profileDao = profileDao;
   }
 
-  public List<UserProfile> search(String query) {
-    return friendDao.search(query);
+  private boolean isAdmin(String userId) {
+    return userId != null && !userId.isBlank() && profileDao.isAdmin(userId);
+  }
+
+  public List<UserProfile> search(String query, String currentUserId) {
+    return friendDao.search(query, isAdmin(currentUserId));
   }
 
   public FriendRequest sendRequest(String from, String to) {
@@ -32,8 +38,8 @@ public class FriendService {
     return friendDao.listPending(userId);
   }
 
-  public List<UserProfile> listFriends(String userId) {
-    return friendDao.listFriends(userId);
+  public List<UserProfile> listFriends(String userId, String currentUserId) {
+    return friendDao.listFriends(userId, isAdmin(currentUserId));
   }
 
   public Friendship connect(String userId, String friendId) {
@@ -48,7 +54,7 @@ public class FriendService {
     return friendDao.existsFriendship(userId, friendId);
   }
 
-  public List<UserProfile> randomProfiles(int limit) {
-    return friendDao.randomProfiles(limit);
+  public List<UserProfile> randomProfiles(int limit, String currentUserId) {
+    return friendDao.randomProfiles(limit, isAdmin(currentUserId));
   }
 }

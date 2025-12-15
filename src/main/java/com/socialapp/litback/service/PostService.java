@@ -15,29 +15,35 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 public class PostService {
   private final PostDao postDao;
+  private final ProfileService profileService;
 
-  public PostService(PostDao postDao) {
+  public PostService(PostDao postDao, ProfileService profileService) {
     this.postDao = postDao;
+    this.profileService = profileService;
+  }
+
+  private boolean isAdmin(String userId) {
+    return userId != null && !userId.isBlank() && profileService.isAdmin(userId);
   }
 
   public Optional<Post> getPost(String id, String userId) {
-    return postDao.findById(id, userId);
+    return postDao.findById(id, userId, isAdmin(userId));
   }
 
   public Optional<PostDetails> getPostDetails(String id, String userId) {
-    return postDao.findDetailsById(id, userId);
+    return postDao.findDetailsById(id, userId, isAdmin(userId));
   }
 
   public List<Post> listPosts(String userId) {
-    return postDao.listAll(userId);
+    return postDao.listAll(userId, isAdmin(userId));
   }
 
   public List<Post> listPostsByAuthor(String authorId, String userId) {
-    return postDao.listByAuthor(authorId, userId);
+    return postDao.listByAuthor(authorId, userId, isAdmin(userId));
   }
 
   public List<Post> search(String query, String userId) {
-    return postDao.searchByCaption(query, userId);
+    return postDao.search(query, userId, isAdmin(userId));
   }
 
   public List<Comment> getComments(String postId) {
@@ -95,6 +101,6 @@ public class PostService {
   }
 
   public List<Post> randomPosts(int limit, String userId) {
-    return postDao.randomPosts(limit, userId);
+    return postDao.randomPosts(limit, userId, isAdmin(userId));
   }
 }

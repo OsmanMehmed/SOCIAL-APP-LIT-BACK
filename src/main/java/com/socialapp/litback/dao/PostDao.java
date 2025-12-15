@@ -61,48 +61,52 @@ public class PostDao {
     return false;
   }
 
-  public List<Post> listAll(String userId) {
+  public List<Post> listAll(String userId, boolean includeBanned) {
     String sql = "SELECT p.id, p.title, p.description, p.caption, p.author_id, p.image_url, p.likes, p.comments, p.saves, p.banned, "
         + "CASE WHEN pl.user_id IS NULL THEN FALSE ELSE TRUE END AS liked "
         + "FROM posts p "
         + "LEFT JOIN post_likes pl ON pl.post_id = p.id AND pl.user_id = ? "
+        + "WHERE (p.banned = false OR ? = true) "
         + "ORDER BY p.updated_at DESC";
-    return jdbcTemplate.query(sql, this::mapPost, userId);
+    return jdbcTemplate.query(sql, this::mapPost, userId, includeBanned);
   }
 
-  public List<Post> listByAuthor(String authorId, String userId) {
+  public List<Post> listByAuthor(String authorId, String userId, boolean includeBanned) {
     String sql = "SELECT p.id, p.title, p.description, p.caption, p.author_id, p.image_url, p.likes, p.comments, p.saves, p.banned, "
         + "CASE WHEN pl.user_id IS NULL THEN FALSE ELSE TRUE END AS liked "
         + "FROM posts p "
         + "LEFT JOIN post_likes pl ON pl.post_id = p.id AND pl.user_id = ? "
         + "WHERE p.author_id = ? "
+        + "AND (p.banned = false OR ? = true) "
         + "ORDER BY p.updated_at DESC";
-    return jdbcTemplate.query(sql, this::mapPost, userId, authorId);
+    return jdbcTemplate.query(sql, this::mapPost, userId, authorId, includeBanned);
   }
 
-  public List<Post> searchByCaption(String query, String userId) {
+  public List<Post> searchByCaption(String query, String userId, boolean includeBanned) {
     String like = "%" + query.toLowerCase() + "%";
     String sql = "SELECT p.id, p.title, p.description, p.caption, p.author_id, p.image_url, p.likes, p.comments, p.saves, p.banned, "
         + "CASE WHEN pl.user_id IS NULL THEN FALSE ELSE TRUE END AS liked "
         + "FROM posts p "
         + "LEFT JOIN post_likes pl ON pl.post_id = p.id AND pl.user_id = ? "
         + "WHERE LOWER(p.caption) LIKE ? "
+        + "AND (p.banned = false OR ? = true) "
         + "ORDER BY p.updated_at DESC";
-    return jdbcTemplate.query(sql, this::mapPost, userId, like);
+    return jdbcTemplate.query(sql, this::mapPost, userId, like, includeBanned);
   }
 
-  public Optional<Post> findById(String id, String userId) {
+  public Optional<Post> findById(String id, String userId, boolean includeBanned) {
     String sql = "SELECT p.id, p.title, p.description, p.caption, p.author_id, p.image_url, p.likes, p.comments, p.saves, p.banned, "
         + "CASE WHEN pl.user_id IS NULL THEN FALSE ELSE TRUE END AS liked "
         + "FROM posts p "
         + "LEFT JOIN post_likes pl ON pl.post_id = p.id AND pl.user_id = ? "
-        + "WHERE p.id = ?";
-    var result = jdbcTemplate.query(sql, this::mapPost, userId, id).stream().findFirst();
+        + "WHERE p.id = ? "
+        + "AND (p.banned = false OR ? = true)";
+    var result = jdbcTemplate.query(sql, this::mapPost, userId, id, includeBanned).stream().findFirst();
     if (result.isPresent())
       return result;
 
     String altId = id.startsWith(Constants.POST_PREFIX) ? id : Constants.POST_PREFIX + id;
-    return jdbcTemplate.query(sql, this::mapPost, userId, altId).stream().findFirst();
+    return jdbcTemplate.query(sql, this::mapPost, userId, altId, includeBanned).stream().findFirst();
   }
 
   public List<Comment> findComments(String postId) {
@@ -114,8 +118,8 @@ public class PostDao {
     return jdbcTemplate.query(sql, this::mapComment, altId);
   }
 
-  public Optional<PostDetails> findDetailsById(String id, String userId) {
-    Optional<Post> existing = findById(id, userId);
+  public Optional<PostDetails> findDetailsById(String id, String userId, boolean includeBanned) {
+    Optional<Post> existing = findById(id, userId, includeBanned);
     if (existing.isEmpty()) {
       return Optional.empty();
     }
@@ -193,7 +197,7 @@ public class PostDao {
         post.banned(),
         false,
         List.of(),
-        imageUrls.isEmpty() ? List.of(imageUrl) : imageUrls,
+        imageUrls.isEmpty() ? (imageUrl != null ? List.of(imageUrl) : List.of()) : imageUrls,
         Instant.now(),
         post.tags() == null ? List.of() : post.tags());
   }
@@ -208,7 +212,7 @@ public class PostDao {
 
   private Optional<PostDetails> update(Post post, List<String> imageUrls) {
     String normalizedId = normalizePostId(post.id());
-    Optional<Post> existingOpt = findById(normalizedId, null);
+    Optional<Post> existingOpt = findById(normalizedId, null, true);
     if (existingOpt.isEmpty()) {
       return Optional.empty();
     }
@@ -392,7 +396,7 @@ public class PostDao {
 
   public Optional<Post> like(String postId, String userId, boolean like) {
     String normalized = normalizePostId(postId);
-    Optional<Post> existing = findById(normalized, userId);
+    Optional<Post> existing = findById(normalized, userId, true);
     if (existing.isEmpty()) {
       return Optional.empty();
     }
@@ -419,7 +423,7 @@ public class PostDao {
           normalized);
     }
 
-    return findById(normalized, userId);
+    return findById(normalized, userId, true);
   }
 
   public Optional<Post> save(String postId, boolean save) {
@@ -437,7 +441,7 @@ public class PostDao {
         save ? 1 : -1,
         save ? 1 : -1,
         normalized);
-    return findById(normalized, null);
+    return findById(normalized, null, true);
   }
 
   public Optional<Post> setBanned(String postId, boolean banned) {
@@ -447,7 +451,7 @@ public class PostDao {
     if (updatedPosts == 0 && updatedDetails == 0) {
       return Optional.empty();
     }
-    return findById(normalized, null);
+    return findById(normalized, null, true);
   }
 
   private boolean isLiked(String postId, String userId) {
@@ -462,20 +466,21 @@ public class PostDao {
     return count != null && count > 0;
   }
 
-  public List<Post> search(String query, String userId) {
+  public List<Post> search(String query, String userId, boolean includeBanned) {
     String q = "%" + query.toLowerCase() + "%";
     String sql = "SELECT p.id, p.caption, p.author_id, p.image_url, p.likes, p.comments, p.saves, p.banned, "
         + "CASE WHEN pl.user_id IS NULL THEN FALSE ELSE TRUE END AS liked "
         + "FROM posts p "
         + "LEFT JOIN post_likes pl ON pl.post_id = p.id AND pl.user_id = ? "
-        + "WHERE LOWER(p.caption) LIKE ? OR LOWER(p.author_id) LIKE ? "
+        + "WHERE (LOWER(p.caption) LIKE ? OR LOWER(p.author_id) LIKE ?) "
+        + "AND (p.banned = false OR ? = true) "
         + "ORDER BY p.updated_at DESC";
-    return jdbcTemplate.query(sql, this::mapPost, userId, q, q);
+    return jdbcTemplate.query(sql, this::mapPost, userId, q, q, includeBanned);
   }
 
-  public List<Post> randomPosts(int limit, String userId) {
+  public List<Post> randomPosts(int limit, String userId, boolean includeBanned) {
     int safeLimit = Math.max(1, Math.min(limit, 20));
-    List<Post> entries = listAll(userId);
+    List<Post> entries = listAll(userId, includeBanned);
     if (entries.isEmpty()) {
       return entries;
     }

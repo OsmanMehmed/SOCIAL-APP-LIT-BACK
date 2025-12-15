@@ -27,11 +27,11 @@ public class PostService {
   }
 
   public Optional<Post> getPost(String id, String userId) {
-    return postDao.findById(id, userId, isAdmin(userId));
+    return postDao.findById(id, userId, true);
   }
 
   public Optional<PostDetails> getPostDetails(String id, String userId) {
-    return postDao.findDetailsById(id, userId, isAdmin(userId));
+    return postDao.findDetailsById(id, userId, true);
   }
 
   public List<Post> listPosts(String userId) {

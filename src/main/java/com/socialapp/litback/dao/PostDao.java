@@ -303,6 +303,8 @@ public class PostDao {
     jdbcTemplate.update("DELETE FROM post_likes WHERE post_id = ?", normalized);
     jdbcTemplate.update("DELETE FROM comments WHERE post_id = ?", normalized);
     jdbcTemplate.update("DELETE FROM post_tags WHERE post_id = ?", normalized);
+    jdbcTemplate.update("DELETE FROM post_images WHERE post_id = ?", normalized);
+    jdbcTemplate.update("DELETE FROM post_details WHERE id = ?", normalized);
     jdbcTemplate.update("DELETE FROM posts WHERE id = ?", normalized);
   }
 
@@ -496,13 +498,13 @@ public class PostDao {
         + "CASE WHEN pl.user_id IS NULL THEN FALSE ELSE TRUE END AS liked "
         + "FROM posts p "
         + "JOIN users u ON u.id = p.author_id "
-        + "JOIN post_details pd ON pd.id = p.id "
+        + "LEFT JOIN post_details pd ON pd.id = p.id "
         + "LEFT JOIN post_likes pl ON pl.post_id = p.id AND pl.user_id = ? "
-        + "WHERE (LOWER(pd.caption) LIKE ? OR LOWER(p.title) LIKE ? OR LOWER(p.description) LIKE ?) "
-        + "AND (p.banned = false OR ? = true) "
+        + "WHERE (LOWER(COALESCE(pd.caption, '')) LIKE ? OR LOWER(p.title) LIKE ? OR LOWER(p.description) LIKE ?) "
+        + "AND (p.banned = false OR ? = true OR p.author_id = ?) "
         + "AND (u.banned = false OR ? = true) "
         + "ORDER BY p.updated_at DESC";
-    return jdbcTemplate.query(sql, this::mapPost, userId, q, q, q, includeBanned, includeBanned);
+    return jdbcTemplate.query(sql, this::mapPost, userId, q, q, q, includeBanned, userId, includeBanned);
   }
 
   public List<Post> randomPosts(int limit, String userId, boolean includeBanned) {

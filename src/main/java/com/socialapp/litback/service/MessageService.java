@@ -32,6 +32,6 @@ public class MessageService {
   }
 
   public List<Conversation> listConversations(String userId) {
-    return messageDao.listConversations(userId);
+    return messageDao.listConversations(userId, false);
   }
 }

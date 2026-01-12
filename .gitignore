@@ -1,8 +1,0 @@
-﻿target
-.m2
-.idea
-effective-pom.xml
-*.log
-CONTEXT.txt
-CONTEXT.md
-*.txt

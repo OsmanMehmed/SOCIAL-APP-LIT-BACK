@@ -52,13 +52,6 @@
         <configuration>
           <mainClass>com.socialapp.litback.LitBackApplication</mainClass>
         </configuration>
-        <executions>
-          <execution>
-            <goals>
-              <goal>repackage</goal>
-            </goals>
-          </execution>
-        </executions>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -66,6 +59,7 @@
         <version>3.11.0</version>
         <configuration>
           <release>${java.version}</release>
+          <parameters>true</parameters>
         </configuration>
       </plugin>
     </plugins>

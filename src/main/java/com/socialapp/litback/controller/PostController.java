@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.UUID;
@@ -112,7 +113,7 @@ public class PostController {
         0,
         false,
         false,
-        tags != null ? tags : java.util.Collections.emptyList());
+        tags != null ? tags : Collections.emptyList());
     PostDetails created = postService.createWithImages(post, imageUrls, caption);
     return ResponseEntity.ok(created);
   }
@@ -166,7 +167,7 @@ public class PostController {
         0,
         false,
         false,
-        tags != null ? tags : java.util.Collections.emptyList());
+        tags != null ? tags : Collections.emptyList());
 
     System.out.println("DEBUG: updatePostMultipart. id=" + id + " existingImages=" + existingImages + " images="
         + (images != null ? images.size() : "null"));

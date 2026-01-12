@@ -5,6 +5,8 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -16,7 +18,7 @@ public class ProfileDao {
     this.jdbcTemplate = jdbcTemplate;
   }
 
-  private UserProfile mapProfile(java.sql.ResultSet rs, int rowNum) throws java.sql.SQLException {
+  private UserProfile mapProfile(ResultSet rs, int rowNum) throws SQLException {
     return new UserProfile(
         rs.getString("id"),
         "@" + rs.getString("username"),

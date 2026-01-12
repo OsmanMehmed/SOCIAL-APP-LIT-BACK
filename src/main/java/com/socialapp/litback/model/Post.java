@@ -1,5 +1,7 @@
 package com.socialapp.litback.model;
 
+import java.util.List;
+
 public record Post(
         String id,
         String title,
@@ -12,5 +14,5 @@ public record Post(
         int saves,
         boolean banned,
         Boolean liked,
-        java.util.List<String> tags) {
+        List<String> tags) {
 }

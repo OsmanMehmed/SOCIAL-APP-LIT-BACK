@@ -3,6 +3,8 @@ package com.socialapp.litback.controller;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Objects;
+
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -27,7 +29,7 @@ public class AssetController {
 
     Path uploadPath = Paths.get("uploads").resolve(safeFolder).resolve(safeFile);
     Resource resource = new org.springframework.core.io.FileSystemResource(
-        java.util.Objects.requireNonNull(uploadPath));
+        Objects.requireNonNull(uploadPath));
 
     if (!resource.exists()) {
       resource = new ClassPathResource("static/assets/" + safeFolder + "/" + safeFile);
@@ -40,7 +42,7 @@ public class AssetController {
     MediaType mediaType = MediaTypeFactory.getMediaType(resource).orElse(MediaType.APPLICATION_OCTET_STREAM);
     return ResponseEntity.ok()
         .header(HttpHeaders.CACHE_CONTROL, "no-cache, no-store, must-revalidate")
-        .contentType(java.util.Objects.requireNonNull(mediaType))
+        .contentType(Objects.requireNonNull(mediaType))
         .body(resource);
   }
 }

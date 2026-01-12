@@ -7,6 +7,8 @@ import com.socialapp.litback.shared.Constants;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -19,7 +21,7 @@ public class FriendDao {
     this.jdbcTemplate = jdbcTemplate;
   }
 
-  private UserProfile mapProfile(java.sql.ResultSet rs, int rowNum) throws java.sql.SQLException {
+  private UserProfile mapProfile(ResultSet rs, int rowNum) throws SQLException {
     return new UserProfile(
         rs.getString("id"),
         "@" + rs.getString("username"),
@@ -32,7 +34,7 @@ public class FriendDao {
         false);
   }
 
-  private FriendRequest mapRequest(java.sql.ResultSet rs, int rowNum) throws java.sql.SQLException {
+  private FriendRequest mapRequest(ResultSet rs, int rowNum) throws SQLException {
     return new FriendRequest(
         rs.getString("id"),
         rs.getString("from_user_id"),
@@ -40,7 +42,7 @@ public class FriendDao {
         rs.getString("status"));
   }
 
-  private Friendship mapFriendship(java.sql.ResultSet rs, int rowNum) throws java.sql.SQLException {
+  private Friendship mapFriendship(ResultSet rs, int rowNum) throws SQLException {
     return new Friendship(rs.getString("id"), rs.getString("user_id"), rs.getString("friend_id"));
   }
 

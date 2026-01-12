@@ -91,10 +91,6 @@ public class AuthDao {
         .append("FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.token = ?")
         .toString();
     try {
-      if (sql == null) {
-        throw new IllegalArgumentException("sql is null");
-      }
-
       UserProfile profile = jdbcTemplate.queryForObject(sql, (rs, rowNum) -> mapUserProfile(
           rs.getString("id"),
           "@" + rs.getString("username"),
@@ -105,6 +101,9 @@ public class AuthDao {
           rs.getString("url"),
           rs.getBoolean("admin")), token);
       profile = Objects.requireNonNull(profile, "Profile must not be null");
+      jdbcTemplate.update(
+          "UPDATE sessions SET expires_at = {fn TIMESTAMPADD(SQL_TSI_HOUR, 24, CURRENT_TIMESTAMP)} WHERE token = ?",
+          token);
       return new AuthResponse(token, profile);
     } catch (EmptyResultDataAccessException ex) {
       throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, Constants.ERR_SESION_NO_VALIDA);

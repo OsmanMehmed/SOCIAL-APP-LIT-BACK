@@ -1,6 +1,7 @@
 package com.socialapp.litback.service;
 
 import com.socialapp.litback.dao.FriendDao;
+import com.socialapp.litback.dao.ProfileDao;
 import com.socialapp.litback.model.FriendRequest;
 import com.socialapp.litback.model.Friendship;
 import com.socialapp.litback.model.UserProfile;
@@ -11,9 +12,9 @@ import java.util.List;
 @Service
 public class FriendService {
   private final FriendDao friendDao;
-  private final com.socialapp.litback.dao.ProfileDao profileDao;
+  private final ProfileDao profileDao;
 
-  public FriendService(FriendDao friendDao, com.socialapp.litback.dao.ProfileDao profileDao) {
+  public FriendService(FriendDao friendDao, ProfileDao profileDao) {
     this.friendDao = friendDao;
     this.profileDao = profileDao;
   }

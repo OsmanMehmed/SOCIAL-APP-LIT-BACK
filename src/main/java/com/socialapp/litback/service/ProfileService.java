@@ -1,5 +1,6 @@
 package com.socialapp.litback.service;
 
+import com.socialapp.litback.dao.AuthDao;
 import com.socialapp.litback.dao.FriendDao;
 import com.socialapp.litback.dao.MessageDao;
 import com.socialapp.litback.dao.PostDao;
@@ -17,10 +18,10 @@ public class ProfileService {
   private final FriendDao friendDao;
   private final PostDao postDao;
   private final MessageDao messageDao;
-  private final com.socialapp.litback.dao.AuthDao authDao;
+  private final AuthDao authDao;
 
   public ProfileService(ProfileDao profileDao, FriendService friendService, FriendDao friendDao, PostDao postDao,
-      MessageDao messageDao, com.socialapp.litback.dao.AuthDao authDao) {
+      MessageDao messageDao, AuthDao authDao) {
     this.profileDao = profileDao;
     this.friendService = friendService;
     this.friendDao = friendDao;

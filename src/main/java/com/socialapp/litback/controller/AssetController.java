@@ -23,7 +23,7 @@ public class AssetController {
   @GetMapping("/{folder}/{file}")
   public ResponseEntity<Resource> getAsset(
       @PathVariable String folder,
-      @PathVariable String file) throws IOException {
+      @PathVariable String file) {
     String safeFolder = folder.replaceAll("[^a-zA-Z0-9_-]", "");
     String safeFile = file.replaceAll("[^a-zA-Z0-9_.-]", "");
 

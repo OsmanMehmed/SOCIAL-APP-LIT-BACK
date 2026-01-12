@@ -88,4 +88,16 @@ public class MessageDao {
     List<Conversation> matches = jdbcTemplate.query(sql, this::mapConversation, a, b, b, a);
     return matches.isEmpty() ? null : matches.get(0);
   }
+
+  public void deleteAllConversations(String userId) {
+    List<String> conversationIds = jdbcTemplate.query(
+        "SELECT id FROM conversations WHERE participant_a = ? OR participant_b = ?",
+        (rs, rowNum) -> rs.getString("id"),
+        userId, userId);
+
+    for (String convId : conversationIds) {
+      jdbcTemplate.update("DELETE FROM messages WHERE conversation_id = ?", convId);
+      jdbcTemplate.update("DELETE FROM conversations WHERE id = ?", convId);
+    }
+  }
 }

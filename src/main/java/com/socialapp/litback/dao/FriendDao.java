@@ -140,4 +140,12 @@ public class FriendDao {
     Collections.shuffle(entries);
     return entries.subList(0, Math.min(safeLimit, entries.size()));
   }
+
+  public void deleteAllFriendships(String userId) {
+    jdbcTemplate.update("DELETE FROM friends WHERE user_id = ? OR friend_id = ?", userId, userId);
+  }
+
+  public void deleteAllFriendRequests(String userId) {
+    jdbcTemplate.update("DELETE FROM friend_requests WHERE from_user_id = ? OR to_user_id = ?", userId, userId);
+  }
 }

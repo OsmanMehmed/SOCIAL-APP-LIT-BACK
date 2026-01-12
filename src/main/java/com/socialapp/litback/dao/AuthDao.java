@@ -80,6 +80,10 @@ public class AuthDao {
     jdbcTemplate.update("DELETE FROM sessions WHERE token = ?", token);
   }
 
+  public void deleteSessionsByUserId(String userId) {
+    jdbcTemplate.update("DELETE FROM sessions WHERE user_id = ?", userId);
+  }
+
   public AuthResponse refresh(String token) {
     String sql = new StringBuilder()
         .append("SELECT u.id, u.username, u.subtitle, u.friend, u.banned, u.avatar_url ")

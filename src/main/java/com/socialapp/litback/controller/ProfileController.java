@@ -78,7 +78,13 @@ public class ProfileController {
   }
 
   @DeleteMapping("/{id}")
-  public ResponseEntity<Void> deleteProfile(@PathVariable String id) {
+  public ResponseEntity<Void> deleteProfile(
+      @PathVariable String id,
+      @RequestHeader(value = "X-User-Id", required = false) String currentUserId) {
+
+    if (currentUserId != null && !currentUserId.equals(id) && !profileService.isAdmin(currentUserId)) {
+      return ResponseEntity.status(403).build();
+    }
     profileService.deleteProfile(id);
     return ResponseEntity.noContent().build();
   }

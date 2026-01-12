@@ -308,6 +308,48 @@ public class PostDao {
     jdbcTemplate.update("DELETE FROM posts WHERE id = ?", normalized);
   }
 
+  public void deleteByAuthorId(String authorId) {
+    List<String> postIds = jdbcTemplate.query(
+        "SELECT id FROM posts WHERE author_id = ?",
+        (rs, rowNum) -> rs.getString("id"),
+        authorId);
+    for (String postId : postIds) {
+      delete(postId);
+    }
+  }
+
+  public void deleteLikesByUserId(String userId) {
+    List<String> postIds = jdbcTemplate.query(
+        "SELECT post_id FROM post_likes WHERE user_id = ?",
+        (rs, rowNum) -> rs.getString("post_id"),
+        userId);
+
+    jdbcTemplate.update("DELETE FROM post_likes WHERE user_id = ?", userId);
+
+    for (String postId : postIds) {
+      String normalized = normalizePostId(postId);
+      jdbcTemplate.update("UPDATE posts SET likes = CASE WHEN likes > 0 THEN likes - 1 ELSE 0 END WHERE id = ?",
+          normalized);
+      jdbcTemplate.update("UPDATE post_details SET likes = CASE WHEN likes > 0 THEN likes - 1 ELSE 0 END WHERE id = ?",
+          normalized);
+    }
+  }
+
+  public void deleteCommentsByAuthorId(String userId) {
+    List<String> postIds = jdbcTemplate.query(
+        "SELECT post_id FROM comments WHERE author_id = ?",
+        (rs, rowNum) -> rs.getString("post_id"),
+        userId);
+
+    jdbcTemplate.update("DELETE FROM comments WHERE author_id = ?", userId);
+
+    for (String pid : postIds) {
+      String normalized = normalizePostId(pid);
+      jdbcTemplate.update("UPDATE posts SET comments = comments - 1 WHERE id = ?", normalized);
+      jdbcTemplate.update("UPDATE post_details SET comments = comments - 1 WHERE id = ?", normalized);
+    }
+  }
+
   private String normalizePostId(String id) {
     if (id == null || id.isBlank())
       return id;

@@ -27,8 +27,6 @@ CREATE TABLE posts (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (author_id) REFERENCES users(id)
 );
-CREATE INDEX idx_posts_author ON posts(author_id);
-CREATE INDEX idx_posts_created ON posts(created_at);
 
 CREATE TABLE comments (
     id VARCHAR(36) PRIMARY KEY,
@@ -39,8 +37,6 @@ CREATE TABLE comments (
     FOREIGN KEY (post_id) REFERENCES posts(id),
     FOREIGN KEY (author_id) REFERENCES users(id)
 );
-CREATE INDEX idx_comments_post ON comments(post_id);
-CREATE INDEX idx_comments_author ON comments(author_id);
 
 CREATE TABLE conversations (
     id VARCHAR(36) PRIMARY KEY,
@@ -51,7 +47,6 @@ CREATE TABLE conversations (
     FOREIGN KEY (participant_a) REFERENCES users(id),
     FOREIGN KEY (participant_b) REFERENCES users(id)
 );
-CREATE INDEX idx_conversations_participants ON conversations(participant_a, participant_b);
 
 CREATE TABLE messages (
     id VARCHAR(36) PRIMARY KEY,
@@ -64,8 +59,6 @@ CREATE TABLE messages (
     FOREIGN KEY (from_user) REFERENCES users(id),
     FOREIGN KEY (to_user) REFERENCES users(id)
 );
-CREATE INDEX idx_messages_conversation ON messages(conversation_id);
-CREATE INDEX idx_messages_from_user ON messages(from_user);
 
 CREATE TABLE sessions (
     token VARCHAR(500) PRIMARY KEY,
@@ -74,7 +67,6 @@ CREATE TABLE sessions (
     expires_at TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
-CREATE INDEX idx_sessions_user ON sessions(user_id);
 
 CREATE TABLE friends (
     id VARCHAR(36) PRIMARY KEY,
@@ -85,7 +77,6 @@ CREATE TABLE friends (
     FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (friend_id) REFERENCES users(id)
 );
-CREATE INDEX idx_friends_user ON friends(user_id);
 
 CREATE TABLE friend_requests (
     id VARCHAR(36) PRIMARY KEY,
@@ -97,9 +88,6 @@ CREATE TABLE friend_requests (
     FOREIGN KEY (from_user_id) REFERENCES users(id),
     FOREIGN KEY (to_user_id) REFERENCES users(id)
 );
-CREATE INDEX idx_friend_requests_from_user ON friend_requests(from_user_id);
-CREATE INDEX idx_friend_requests_to_user ON friend_requests(to_user_id);
-CREATE INDEX idx_friend_requests_status ON friend_requests(status);
 
 CREATE TABLE post_details (
     id VARCHAR(36) PRIMARY KEY,
@@ -115,7 +103,6 @@ CREATE TABLE post_details (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (author_id) REFERENCES users(id)
 );
-CREATE INDEX idx_post_details_author ON post_details(author_id);
 
 CREATE TABLE post_likes (
     post_id VARCHAR(36) NOT NULL,
@@ -125,7 +112,6 @@ CREATE TABLE post_likes (
     FOREIGN KEY (post_id) REFERENCES posts(id),
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
-CREATE INDEX idx_post_likes_user ON post_likes(user_id);
 
 CREATE TABLE post_images (
     id VARCHAR(36) PRIMARY KEY,
@@ -134,11 +120,9 @@ CREATE TABLE post_images (
     position INT DEFAULT 0,
     FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
 );
-CREATE INDEX idx_post_images_post ON post_images(post_id);
 
 CREATE TABLE post_tags (
     post_id VARCHAR(36) NOT NULL,
     tag VARCHAR(100) NOT NULL,
     FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
 );
-CREATE INDEX idx_post_tags_post ON post_tags(post_id);

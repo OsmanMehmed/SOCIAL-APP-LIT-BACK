@@ -21,7 +21,9 @@ INSERT INTO posts (id, author_id, title, description, image_url, likes, comments
 ('post-5', 'user-2', '🌯 Wraps Crunchy de Pollo y Miel', 'Almuerzo rápido pero gourmet: wraps de pollo rebozado en panko con una salsa especial de sriracha y miel.', '/api/assets/posts/post-5-wraps.jpg', 51, 9, 7, FALSE),
 ('post-6', 'user-2', '🍰 Cheesecake de Frutos Rojos (Sin Horno)', 'El postre perfecto para el verano. Base de galleta, crema de queso suave y una cobertura generosa de frutos rojos frescos.', '/api/assets/posts/post-6-cheesecake.jpg', 76, 11, 10, FALSE),
 ('post-7', 'user-4', '🌮 Tacos al Pastor Veganos (Soja)', 'Tacos al pastor veganos hechos con soja texturizada, piña asada y cilantro fresco. ¡No notarás la diferencia!', '/api/assets/posts/post-7-tacos.jpg', 63, 4, 2, FALSE),
-('post-8', 'user-5', '🍩 Donas Glaseadas Rellenas', 'Capricho de fin de semana: donas esponjosas rellenas de crema pastelera de vainilla y glaseado de chocolate.', '/api/assets/posts/post-8-donas.jpg', 41, 7, 5, FALSE),
+('post-8', 'user-5', '🍩 Donuts Glaseadas Rellenas', 'Capricho de fin de semana: Donuts esponjosas rellenas de crema pastelera de vainilla y glaseado
+de
+ chocolate.', '/api/assets/posts/post-8-donuts.jpg', 41, 7, 5, FALSE),
 ('post-9', 'user-5', '🍺 Stout Casera: "La Noche Oscura"', 'Desvelando el secreto de mi Stout casera. Notas de chocolate, café y un toque de vainilla. Fermentada durante 3 semanas.', '/api/assets/posts/post-9-cerveza.jpg', 28, 1, 0, FALSE);
 
 INSERT INTO post_details (id, title, description, caption, author_id, image_url, likes, comments, saves, banned) VALUES
@@ -122,7 +124,9 @@ INSERT INTO post_details (id, title, description, caption, author_id, image_url,
 4. Sirve sobre tortillas calientes con trozos de piña, cilantro, cebolla y un chorrito de lima.', 'user-4', '/api/assets/posts/post-7-tacos.jpg', 63, 4, 2, FALSE);
 
 INSERT INTO post_details (id, title, description, caption, author_id, image_url, likes, comments, saves, banned) VALUES
-('post-8', '🍩 Donas Glaseadas Rellenas', 'Capricho de fin de semana: donas esponjosas rellenas de crema pastelera de vainilla y glaseado de chocolate.', 'El capricho definitivo para el fin de semana.
+('post-8', '🍩 Donuts Glaseados Rellenas', 'Capricho de fin de semana: donuts esponjosos rellenas de crema pastelera de vainilla y glaseado de
+chocolate
+.', 'El capricho definitivo para el fin de semana.
 
 **Ingredientes:**
 - 500g harina de fuerza
@@ -137,7 +141,7 @@ INSERT INTO post_details (id, title, description, caption, author_id, image_url,
 2. Estira la masa, corta círculos y deja fermentar otros 30 min.
 3. Fríe en aceite a 170°C, dando la vuelta para dorar ambos lados.
 4. Deja enfriar, haz un agujero y rellena con manga pastelera.
-5. Baña la parte superior en glaseado de chocolate o azúcar.', 'user-5', '/api/assets/posts/post-8-donas.jpg', 41, 7, 5, FALSE);
+5. Baña la parte superior en glaseado de chocolate o azúcar.', 'user-5', '/api/assets/posts/post-8-donuts.jpg', 41, 7, 5, FALSE);
 
 INSERT INTO post_details (id, title, description, caption, author_id, image_url, likes, comments, saves, banned) VALUES
 ('post-9', '🍺 Stout Casera: "La Noche Oscura"', 'Desvelando el secreto de mi Stout casera. Notas de chocolate, café y un toque de vainilla. Fermentada durante 3 semanas.', 'Mi orgullo de homebrewer. Una cerveza con cuerpo y alma.
@@ -162,7 +166,7 @@ INSERT INTO post_images (id, post_id, url, position) VALUES
 ('img-5', 'post-5', '/api/assets/posts/post-5-wraps.jpg', 0),
 ('img-6', 'post-6', '/api/assets/posts/post-6-cheesecake.jpg', 0),
 ('img-7', 'post-7', '/api/assets/posts/post-7-tacos.jpg', 0),
-('img-8', 'post-8', '/api/assets/posts/post-8-donas.jpg', 0),
+('img-8', 'post-8', '/api/assets/posts/post-8-donuts.jpg', 0),
 ('img-9', 'post-9', '/api/assets/posts/post-9-cerveza.jpg', 0),
 ('img-10', 'post-9', '/api/assets/posts/post-9-cerveza-2.jpg', 1),
 ('img-11', 'post-9', '/api/assets/posts/post-9-cerveza-3.jpg', 2);
@@ -251,7 +255,7 @@ INSERT INTO comments (id, post_id, author_id, text) VALUES
 ('comment-801', 'post-8', 'user-1', '¡Madre mía! Qué esponjosidad.'),
 ('comment-802', 'post-8', 'user-2', 'El relleno se sale, qué rico.'),
 ('comment-803', 'post-8', 'user-3', 'Pecado capital.'),
-('comment-804', 'post-8', 'user-6', 'Cafe y donas, planazo.'),
+('comment-804', 'post-8', 'user-6', 'Cafe y donuts, planazo.'),
 ('comment-805', 'post-8', 'user-7', '¿La masa lleva cardamomo?'),
 ('comment-806', 'post-8', 'user-5', 'Horneadas salen más tipo brioche, fritas son más auténticas. Pero prueba!'),
 
@@ -297,5 +301,5 @@ INSERT INTO post_tags (post_id, tag) VALUES
 ('post-5', 'pollo'), ('post-5', 'crispy'), ('post-5', 'sriracha'),
 ('post-6', 'postre'), ('post-6', 'cheesecake'), ('post-6', 'verano'),
 ('post-7', 'vegano'), ('post-7', 'tacos'), ('post-7', 'mexicano'),
-('post-8', 'donas'), ('post-8', 'chocolate'), ('post-8', 'dulce'),
+('post-8', 'donuts'), ('post-8', 'chocolate'), ('post-8', 'dulce'),
 ('post-9', 'cerveza'), ('post-9', 'craftbeer'), ('post-9', 'homebrewing');

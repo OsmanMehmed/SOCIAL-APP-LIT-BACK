@@ -1,6 +1,6 @@
 # SOCIAL-APP-LIT-BACK
 
-Web social application, back developed using springboot, derby, JDK 20.
+Web social application, back developed using Springboot, Apache Derby, JDK 20.
 
 <img width="2559" height="1384" alt="image" src="https://github.com/user-attachments/assets/eedcdf92-4d9d-4ab9-b2e3-83f836285401" />
 <img width="1109" height="1026" alt="image" src="https://github.com/user-attachments/assets/7dc3f213-6a04-4e55-ad4f-ade71f03d95c" />

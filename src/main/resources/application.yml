@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: social-app-lit-back
+  datasource:
+    url: jdbc:derby:memory:socialdb;create=true
+    driverClassName: org.apache.derby.iapi.jdbc.AutoloadedDriver
+    username: app
+    password: app
+  sql:
+    init:
+      mode: always
+      data-locations: classpath:data.sql
+      schema-locations: classpath:schema.sql
+
+server:
+  port: 8080
